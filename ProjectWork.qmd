@@ -3,3 +3,16 @@ title: "ProjectWork"
 format: html
 editor: visual
 ---
+
+# Data Handling
+
+```{r}
+library(tidyverse)
+data <- read_csv("actual_data_merge (1).csv") |>
+  select(-c(1))
+
+
+data2 <-  data |>
+  pivot_longer(cols = colnames(data[,26:39]), names_to = "YearMonth", values_to = "Occurence" )
+```
+
