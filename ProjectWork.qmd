@@ -8,9 +8,9 @@ editor: visual
 
 ```{r}
 library(tidyverse)
-data <- read_csv("actual_data_merge (1).csv") 
- # select(-c(1)) |>
-rowsums <- data |>
+data <- read_csv("actual_data_merge (1).csv") |>
+select(-c(1))
+  rowsums <- data |>
   select(AUG_2019_dummy:SEP_2023_dummy) |>
   mutate(total = rowSums(across(everything()), na.rm = TRUE))
 
@@ -19,5 +19,7 @@ data$total_fires <- rowsums$total
 
 
 data2 <-  data |>
-  pivot_longer(cols = colnames(data[,26:39]), names_to = "YearMonth", values_to = "Occurence" )
+  pivot_longer(cols = colnames(data[,9:23]), names_to = "YearMonth", values_to = "Occurence" ) |>
+  select(ID, YearMonth, NEAR_DIST, Name, Category, Interview, Shape_Leng, Shape_Area, Region, YearMonth, total_fires, everything())
+data2
 ```
