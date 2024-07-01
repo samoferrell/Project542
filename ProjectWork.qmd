@@ -8,11 +8,16 @@ editor: visual
 
 ```{r}
 library(tidyverse)
-data <- read_csv("actual_data_merge (1).csv") |>
-  select(-c(1))
+data <- read_csv("actual_data_merge (1).csv") 
+ # select(-c(1)) |>
+rowsums <- data |>
+  select(AUG_2019_dummy:SEP_2023_dummy) |>
+  mutate(total = rowSums(across(everything()), na.rm = TRUE))
+
+data$total_fires <- rowsums$total
+
 
 
 data2 <-  data |>
   pivot_longer(cols = colnames(data[,26:39]), names_to = "YearMonth", values_to = "Occurence" )
 ```
-
