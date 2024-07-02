@@ -23,10 +23,19 @@ data$total_fires <- rowsums$total
 
 
 
+
 data2 <-  data |>
   select(-1) |>
   pivot_longer(cols = colnames(data[,27:40]), names_to = "YearMonth", values_to = "Occurrence" )
 ```
+
+Adding new variable - takes on 1 if a fire occured, 0 if not:
+```{r}
+bernoulli <- data |>
+  mutate(fire = ifelse(total_fires > 0,1,0))
+View(bernoulli)
+```
+
 
 ```{r}
 
@@ -50,6 +59,6 @@ update(model, 10, progress.bar="none")
 params  <- c("beta0", "beta")
 samples <- coda.samples(model, 
            variable.names=params, 
-           n.iter=10000, progress.bar="none")
+           n.iter=10, progress.bar="none")
 summary(samples)
 ```
