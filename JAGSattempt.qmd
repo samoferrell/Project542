@@ -1,0 +1,55 @@
+---
+title: "Eliza Norman 7/1"
+format: html
+editor: visual
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+
+Sys.setenv(JAGS_HOME="C:/Program Files/JAGS/JAGS-4.3.1")
+
+library(rjags)
+
+library(MASS)
+library(tidyverse)
+data <- read_csv("actual_data_merge (1).csv")
+
+rowsums <- data |>
+  select(27:40) |>
+  mutate(total = rowSums(across(everything()), na.rm = TRUE))
+ 
+data$total_fires <- rowsums$total
+
+
+
+data2 <-  data |>
+  select(-1) |>
+  pivot_longer(cols = colnames(data[,27:40]), names_to = "YearMonth", values_to = "Occurrence" )
+```
+
+```{r}
+
+model_string <- textConnection("model{
+    for (i in 1:length(y)) {
+      y[i] ~ dbern(p[i])
+      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i] + beta4*x4[i] 
+    }
+    beta0 ~ dnorm( 0 , 1/(10)^2 )
+    beta1 ~ dnorm(0, 1/(10)^2)
+    beta2 ~ dnorm(0, 1/(10)^2)
+    beta3 ~ dnorm(0, 1/(10)^2)
+    beta4 ~ dnorm(0, 1/(10)^2)
+
+}")
+
+data_jags = list(y=data2$Occurrence, x1 = data2$NEAR_DIST, x2 = data2$Shape_Leng, x3 = data2$Shape_Area, x4 = data2$Region)
+
+model <- jags.model(model_string,data = data_jags, n.chains=3,quiet=TRUE)
+update(model, 10, progress.bar="none")
+params  <- c("beta0", "beta")
+samples <- coda.samples(model, 
+           variable.names=params, 
+           n.iter=10000, progress.bar="none")
+summary(samples)
+```
