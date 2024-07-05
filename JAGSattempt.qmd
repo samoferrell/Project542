@@ -18,51 +18,27 @@ data <- read_csv("actual_data_merge (1).csv")
 rowsums <- data |>
   select(27:40) |>
   mutate(total = rowSums(across(everything()), na.rm = TRUE))
- 
+
 data$total_fires <- rowsums$total
-
-
-
-
-data2 <-  data |>
-  select(-1) |>
-  pivot_longer(cols = colnames(data[,27:40]), names_to = "YearMonth", values_to = "Occurrence" )
+# 
+# 
+# 
+# 
+# data2 <-  data |>
+#   select(-1) |>
+#   pivot_longer(cols = colnames(data[,27:40]), names_to = "YearMonth", values_to = "Occurrence" )
 ```
 
 Adding new variable - takes on 1 if a fire occured, 0 if not:
+
 ```{r}
 bernoulli <- data |>
   mutate(fire = ifelse(total_fires > 0,1,0))
-View(bernoulli)
+#View(bernoulli)
 ```
 
-
-```{r}
-
-model_string <- textConnection("model{
-    for (i in 1:length(y)) {
-      y[i] ~ dbern(p[i])
-      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i] + beta4*x4[i] 
-    }
-    beta0 ~ dnorm( 0 , 1/(10)^2 )
-    beta1 ~ dnorm(0, 1/(10)^2)
-    beta2 ~ dnorm(0, 1/(10)^2)
-    beta3 ~ dnorm(0, 1/(10)^2)
-    beta4 ~ dnorm(0, 1/(10)^2)
-
-}")
-
-data_jags = list(y=data2$Occurrence, x1 = data2$NEAR_DIST, x2 = data2$Shape_Leng, x3 = data2$Shape_Area, x4 = data2$Region)
-
-model <- jags.model(model_string,data = data_jags, n.chains=3,quiet=TRUE)
-update(model, 10, progress.bar="none")
-params  <- c("beta0", "beta1","beta2","beta3","beta4")
-samples <- coda.samples(model, 
-           variable.names=params, 
-           n.iter=10, progress.bar="none")
-summary(samples)
-```
 Trying with bernoulli data:
+
 ```{r}
 
 model_string <- textConnection("model{
@@ -77,6 +53,9 @@ model_string <- textConnection("model{
     beta4 ~ dnorm(0, 1/(10)^2)
 
 }")
+
+# Dr. Reich does not standardize the data, but other resource does
+
 
 data_jags = list(y=bernoulli$fire, x1 = bernoulli$NEAR_DIST, x2 = bernoulli$Shape_Leng, x3 = bernoulli$Shape_Area, x4 = bernoulli$Region)
 
@@ -87,5 +66,36 @@ samples <- coda.samples(model,
            variable.names=params, 
            n.iter=1000, progress.bar="none")
 summary(samples)
+
+```
+```{r}
+b0 <- c(samples[[1]][,1],samples[[2]][,1])
+b1 <- c(samples[[1]][,2],samples[[2]][,2])
+b2 <- c(samples[[1]][,3],samples[[2]][,3])
+b3 <- c(samples[[1]][,4],samples[[2]][,4])
+b4 <- c(samples[[1]][,5],samples[[2]][,5])
+```
+
+
+
+# Prediction
+
+```{r}
+# Combine results from 3 different chains into one by stacking matrices that contain simulations.
+mod1_csim = as.mcmc(do.call(rbind, samples))
+
+# Extract posterior mean of coefficients
+pm_coef = colMeans(mod1_csim)
+
+# The matrix multiplication below gives the exponentiation part in equation which will then be used to find estimated probabilities.
+
+predictors <- matrix(c(bernoulli$NEAR_DIST, bernoulli$Shape_Leng, bernoulli$Shape_Area, bernoulli$Region), nrow = 1282, ncol = 4)
+
+pm_Xb = pm_coef["beta0"] + predictors %*% pm_coef[1:4] 
+# Intercept + Design Matrix*Coefficients
+phat = 1.0 / (1.0 + exp(-pm_Xb))  # Predicted probabilities that the Outcome = 1 for each observations
+
+plot(phat, jitter(bernoulli$fire))
+(tab0.5 = table(phat > 0.5, bernoulli$fire))
 ```
 
