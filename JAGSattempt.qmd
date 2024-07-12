@@ -39,6 +39,8 @@ bernoulli <- data |>
 
 Trying with bernoulli data:
 
+
+# Only main effect for all terms
 ```{r}
 
 model_string <- textConnection("model{
@@ -46,7 +48,8 @@ model_string <- textConnection("model{
       y[i] ~ dbern(p[i])
       logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i] + beta4*x4[i] 
     }
-    beta0 ~ dnorm( 0 , 1/(10)^2 )
+    #Uninformative Priors:
+    beta0 ~ dnorm(0 ,1/(10)^2 )
     beta1 ~ dnorm(0, 1/(10)^2)
     beta2 ~ dnorm(0, 1/(10)^2)
     beta3 ~ dnorm(0, 1/(10)^2)
@@ -67,7 +70,13 @@ samples <- coda.samples(model,
            n.iter=1000, progress.bar="none")
 summary(samples)
 
+# Compute DIC - n.iter needs to be the same above and below
+DIC    <- dic.samples(model,n.iter=1000,n.thin = 5, progress.bar="none")
+DIC
 ```
+
+
+
 ```{r}
 b0 <- c(samples[[1]][,1],samples[[2]][,1])
 b1 <- c(samples[[1]][,2],samples[[2]][,2])
@@ -75,8 +84,6 @@ b2 <- c(samples[[1]][,3],samples[[2]][,3])
 b3 <- c(samples[[1]][,4],samples[[2]][,4])
 b4 <- c(samples[[1]][,5],samples[[2]][,5])
 ```
-
-
 
 # Prediction
 
@@ -93,9 +100,120 @@ predictors <- matrix(c(bernoulli$NEAR_DIST, bernoulli$Shape_Leng, bernoulli$Shap
 
 pm_Xb = pm_coef["beta0"] + predictors %*% pm_coef[1:4] 
 # Intercept + Design Matrix*Coefficients
-phat = 1.0 / (1.0 + exp(-pm_Xb))  # Predicted probabilities that the Outcome = 1 for each observations
+
+# extract probability (basically undo logit link)
+phat = 1.0 / (1.0 + exp(-pm_Xb))  
+# Predicted probabilities that the Outcome = 1 for each observations
 
 plot(phat, jitter(bernoulli$fire))
 (tab0.5 = table(phat > 0.5, bernoulli$fire))
 ```
 
+
+# Main effects of first three vars
+
+```{r}
+
+model_string2 <- textConnection("model{
+    for (i in 1:length(y)) {
+      y[i] ~ dbern(p[i])
+      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i]
+    }
+    #Uninformative Priors:
+    beta0 ~ dnorm(0 ,1/(10)^2 )
+    beta1 ~ dnorm(0, 1/(10)^2)
+    beta2 ~ dnorm(0, 1/(10)^2)
+    beta3 ~ dnorm(0, 1/(10)^2)
+
+}")
+
+# Dr. Reich does not standardize the data, but other resource does
+
+
+data_jags2 = list(y=bernoulli$fire, x1 = bernoulli$NEAR_DIST, x2 = bernoulli$Shape_Leng, x3 = bernoulli$Shape_Area)
+
+model2 <- jags.model(model_string2,data = data_jags2, n.chains=3,quiet=TRUE)
+update(model2, 100, progress.bar="none")
+params2  <- c("beta0", "beta1","beta2","beta3")
+samples2 <- coda.samples(model2, 
+           variable.names=params2, 
+           n.iter=1000, progress.bar="none")
+summary(samples2)
+# Compute DIC - n.iter needs to be the same above and below
+DIC2    <- dic.samples(model2,n.iter=1000,n.thin = 5, progress.bar="none")
+DIC2
+```
+
+
+
+# That raised DIC slightly....
+
+# So let's try model with main effects for NEAR_DIST, shape length, and region
+
+# Main effects of x1, x2, and x4
+
+```{r}
+
+model_string3 <- textConnection("model{
+    for (i in 1:length(y)) {
+      y[i] ~ dbern(p[i])
+      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x4[i]
+    }
+    #Uninformative Priors:
+    beta0 ~ dnorm(0 ,1/(10)^2 )
+    beta1 ~ dnorm(0, 1/(10)^2)
+    beta2 ~ dnorm(0, 1/(10)^2)
+    beta3 ~ dnorm(0, 1/(10)^2)
+
+}")
+
+# Dr. Reich does not standardize the data, but other resource does
+
+
+data_jags3 = list(y=bernoulli$fire, x1 = bernoulli$NEAR_DIST, x2 = bernoulli$Shape_Leng, x4 = bernoulli$Region)
+
+model3 <- jags.model(model_string3,data = data_jags3, n.chains=3,quiet=TRUE)
+update(model3, 100, progress.bar="none")
+params3  <- c("beta0", "beta1","beta2","beta3")
+samples3 <- coda.samples(model3, 
+           variable.names=params3, 
+           n.iter=1000, progress.bar="none")
+summary(samples3)
+# Compute DIC - n.iter needs to be the same above and below
+DIC3    <- dic.samples(model3,n.iter=1000,n.thin = 5, progress.bar="none")
+DIC3
+```
+
+
+# Main effects of x1 and x2
+
+```{r}
+
+model_string4 <- textConnection("model{
+    for (i in 1:length(y)) {
+      y[i] ~ dbern(p[i])
+      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i]
+    }
+    #Uninformative Priors:
+    beta0 ~ dnorm(0 ,1/(10)^2 )
+    beta1 ~ dnorm(0, 1/(10)^2)
+    beta2 ~ dnorm(0, 1/(10)^2)
+
+}")
+
+# Dr. Reich does not standardize the data, but other resource does
+
+
+data_jags4 = list(y=bernoulli$fire, x1 = bernoulli$NEAR_DIST, x2 = bernoulli$Shape_Leng)
+
+model4 <- jags.model(model_string4,data = data_jags4, n.chains=3,quiet=TRUE)
+update(model4, 100, progress.bar="none")
+params4  <- c("beta0", "beta1","beta2")
+samples4 <- coda.samples(model4, 
+           variable.names=params4, 
+           n.iter=1000, progress.bar="none")
+summary(samples4)
+# Compute DIC - n.iter needs to be the same above and below
+DIC4    <- dic.samples(model4,n.iter=1000,n.thin = 5, progress.bar="none")
+DIC4
+```
