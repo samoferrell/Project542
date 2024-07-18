@@ -85,13 +85,42 @@ ggplot(percent, aes(x = Region, y = percent, fill = Region)) +
 
 Average hectacre of burned area, grouped by region, over time. 
 ```{r}
+filtered <- bernoulli |>
+  group_by(Region) |>
+  filter(fire == "1") |>
+  select(Region,10:24)
+View(average)
+```
+
+Pivoting
+```{r}
+pivot <- filtered |>
+  pivot_longer(
+    cols = starts_with("AUG") | starts_with("JUL") | starts_with("SEP"),
+    names_to = "month_year",
+    values_to = "area_burned") |>
+    mutate(year = substr(month_year, nchar(month_year) - 3, nchar(month_year)),
+           month = substr(month_year, 1, 3))
+```
+
+```{r}
+month_summary <- pivot |>
+  group_by(Region,year,month) |>
+  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE)))
 
 ```
 
+```{r}
+year_summary <- pivot |>
+    group_by(Region,year) |>
+    summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE)))
+```
 
 
-
-
+```{r}
+head(year_summary)
+head(month_summary)
+```
 
 
 
