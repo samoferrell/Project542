@@ -39,6 +39,74 @@ bernoulli <- data |>
 
 Trying with bernoulli data:
 
+# Data Analysis
+```{r}
+library(ggplot2)
+```
+
+Count of fire occurrence by region
+```{r}
+region_fire <- table(bernoulli$Region, bernoulli$fire)
+dimnames(region_fire) <- list(
+  "Region" = c("1", "2", "3"),
+  "Occurence of fire" = c("No", "Yes"))
+region_fire
+```
+```{r}
+df <- as.data.frame(region_fire)
+ggplot(df, aes(x = Region, y = Freq, fill = Occurence.of.fire)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Occurrence of Fire by Region",
+       x = "Region",
+       y = "Count",
+       fill = "Occurrence of Fire") +
+    scale_fill_manual(values = c("No" = "skyblue", "Yes" = "maroon")) 
+
+```
+
+Region 1 appears to have the most fires. We should note that this graph looks skewed because
+
+Percentage of yes with respect to each region:
+```{r}
+library(tidyverse)
+percent <- bernoulli |>
+  group_by(Region) |>
+  mutate (Region = as.factor(Region)) |>
+  summarize(percent = sum(fire)/ n() * 100)
+```
+
+```{r}
+ggplot(percent, aes(x = Region, y = percent, fill = Region)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Percentage of Relative Fire Occurences by Region",
+       x = "Region",
+       y = "Percentage") 
+```
+
+Average hectacre of burned area, grouped by region, over time. 
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Only main effect for all terms
 ```{r}
