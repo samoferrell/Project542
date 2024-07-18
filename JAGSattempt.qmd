@@ -100,7 +100,8 @@ pivot <- filtered |>
     names_to = "month_year",
     values_to = "area_burned") |>
     mutate(year = substr(month_year, nchar(month_year) - 3, nchar(month_year)),
-           month = substr(month_year, 1, 3))
+           month = substr(month_year, 1, 3),
+    Region = as.factor(Region))
 ```
 
 ```{r}
@@ -121,10 +122,28 @@ year_summary <- pivot |>
 head(year_summary)
 head(month_summary)
 ```
+```{r}
+ggplot(year_summary, aes(x = year, y = mean_area_burned, 
+                         color = Region, group = Region)) +
+  geom_point(size = 3) +
+  geom_line() +
+  labs(title = "Average Area Burned per Year, Grouped by Region")
+```
 
 
 
+```{r}
+ggplot(month_summary, aes(x = month, y = mean_area_burned, 
+                         color = year, group = year)) +
+  geom_point(size = 3) +
+  geom_line() +
+  facet_grid(year ~ Region) +
+  labs(title = "Average Area Burned per Month, Grouped by Year and Region")
+```
 
+```{r}
+
+```
 
 
 
