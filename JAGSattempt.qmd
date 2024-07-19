@@ -10,7 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 Sys.setenv(JAGS_HOME="C:/Program Files/JAGS/JAGS-4.3.1")
 
 library(rjags)
-
+library(reshape2)
+library(coda)
 library(MASS)
 library(tidyverse)
 data <- read_csv("actual_data_merge (1).csv")
@@ -356,7 +357,7 @@ DIC3
 ## Main effects of x1 and x2
 
 ```{r}
-
+set.seed(50)
 model_string4 <- textConnection("model{
     for (i in 1:length(y)) {
       y[i] ~ dbern(p[i])
@@ -388,6 +389,7 @@ DIC4
 ## Adding an Interaction Term into Model
 
 ```{r}
+set.seed(50)
 model_string5 <- textConnection("model{
     for (i in 1:length(y)) {
       y[i] ~ dbern(p[i])
@@ -416,5 +418,43 @@ summary(samples5)
 # Compute DIC - n.iter needs to be the same above and below
 DIC5    <- dic.samples(model5,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC5
+
+samples_df <- as.data.frame(do.call(rbind, lapply(samples5, as.matrix)))
+
+# Melt the data frame to long format for ggplot2
+samples_long <- melt(samples_df)
+names(samples_long) <- c("Parameter", "Value")
+
+# Filter to beta3
+samples_beta3 <- subset(samples_long, Parameter == "beta3")
+
+# Beta3 Plot
+ggplot(samples_beta3, aes(x=Parameter, y=Value)) +
+  geom_boxplot() +
+  geom_hline(yintercept=0, linetype="dashed", color="red") +
+  labs(title="Boxplot of Interaction Term",
+       x="Coefficient of Interaction Term",
+       y="Value") +
+  theme_minimal()
+
+samples_beta1 <- subset(samples_long, Parameter == "beta1")
+## Beta1 plot
+ggplot(samples_beta1, aes(x=Parameter, y=Value)) +
+  geom_boxplot() +
+  geom_hline(yintercept=0, linetype="dashed", color="red") +
+  labs(title="Boxplot of Distance from Nearest Municipality Slope",
+       x="Coefficient of Distance from Nearest Municipality",
+       y="Value") +
+  theme_minimal()
+
+samples_beta2 <- subset(samples_long, Parameter == "beta2")
+## Beta2 plot
+ggplot(samples_beta2, aes(x=Parameter, y=Value)) +
+  geom_boxplot() +
+  geom_hline(yintercept=0, linetype="dashed", color="red") +
+  labs(title="Boxplot of Perimeter of Lot Slope",
+       x="Perimeter of Lot Slope",
+       y="Value") +
+  theme_minimal()
 ```
 
