@@ -43,15 +43,22 @@ Trying with bernoulli data:
 ```{r}
 library(ggplot2)
 ```
-
+## Tables
 Count of fire occurrence by region
 ```{r}
 region_fire <- table(bernoulli$Region, bernoulli$fire)
 dimnames(region_fire) <- list(
   "Region" = c("1", "2", "3"),
-  "Occurence of fire" = c("No", "Yes"))
+  "Occurence of at least one fire" = c("No", "Yes"))
 region_fire
 ```
+Region and Category counts
+```{r}
+data3 <- bernoulli |>
+  apply_labels(Region = "Region")
+table(data3$Region, data3$Category, dnn=c("Region","Name of Category"))
+```
+## Bar Graphs
 ```{r}
 df <- as.data.frame(region_fire)
 ggplot(df, aes(x = Region, y = Freq, fill = Occurence.of.fire)) +
@@ -82,7 +89,7 @@ ggplot(percent, aes(x = Region, y = percent, fill = Region)) +
        x = "Region",
        y = "Percentage") 
 ```
-
+## Plots
 Average hectacre of burned area, grouped by region, over time. 
 ```{r}
 filtered <- bernoulli |>
@@ -100,7 +107,10 @@ pivot <- filtered |>
     names_to = "month_year",
     values_to = "area_burned") |>
     mutate(year = substr(month_year, nchar(month_year) - 3, nchar(month_year)),
-           month = substr(month_year, 1, 3),
+           monthpre = substr(month_year, 1, 3),
+           # reordering month for plots
+           month = factor(monthpre, levels = c("JUL","AUG","SEP")),
+           
     Region = as.factor(Region))
 ```
 
@@ -141,22 +151,64 @@ ggplot(month_summary, aes(x = month, y = mean_area_burned,
   labs(title = "Average Area Burned per Month, Grouped by Year and Region")
 ```
 
-```{r}
 
+
+
+## Boxplots
+
+```{r}
+pivot_filtered <- pivot |>
+  filter(!is.na(area_burned))
+ggplot(pivot_filtered, aes(x = Region, y = area_burned, fill = Region)) +
+  geom_boxplot() +
+  facet_wrap(~ year) 
 ```
 
 
+Outlier removal - source: https://sqlpad.io/tutorial/remove-outliers/
+```{r}
+removeOutliers <- function(data, column_name) {
+  Q1 <- quantile(data[[column_name]], 0.25)
+  Q3 <- quantile(data[[column_name]], 0.75)
+  IQR <- Q3 - Q1
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+  return(data[data[[column_name]] >= lower_bound & data[[column_name]] <= upper_bound, ])
+}
+```
+
+Applying function:
+```{r}
+boxplot_no_outliers <- removeOutliers(data = pivot_filtered, column_name = "area_burned")
+```
+
+```{r}
+ggplot(boxplot_no_outliers, aes(x = Region, y = area_burned, fill = Region)) +
+  geom_boxplot() +
+  facet_wrap(~ year) 
+```
+
+```{r}
+ggplot(boxplot_no_outliers, aes(x = month, y = area_burned, fill = month)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(boxplot_no_outliers, aes(x = area_burned)) +
+  geom_histogram(
+    bins = 20,               
+    fill = "lightblue",   
+    color = "black") +
+  labs(title = "Histogram of Example Data", 
+       x = "Area Burned",                       
+       y = "Frequency") +
+ facet_wrap(~ month)
+```
 
 
+# Models
 
-
-
-
-
-
-
-
-# Only main effect for all terms
+## Only main effect for all terms
 ```{r}
 
 model_string <- textConnection("model{
@@ -201,7 +253,7 @@ b3 <- c(samples[[1]][,4],samples[[2]][,4])
 b4 <- c(samples[[1]][,5],samples[[2]][,5])
 ```
 
-# Prediction
+## Prediction
 
 ```{r}
 # Combine results from 3 different chains into one by stacking matrices that contain simulations.
@@ -226,7 +278,7 @@ plot(phat, jitter(bernoulli$fire))
 ```
 
 
-# Main effects of first three vars
+## Main effects of first three vars
 
 ```{r}
 
@@ -262,11 +314,10 @@ DIC2
 
 
 
-# That raised DIC slightly....
+That raised DIC slightly....  
+So let's try model with main effects for NEAR_DIST, shape length, and region
 
-# So let's try model with main effects for NEAR_DIST, shape length, and region
-
-# Main effects of x1, x2, and x4
+## Main effects of x1, x2, and x4
 
 ```{r}
 
@@ -301,7 +352,7 @@ DIC3
 ```
 
 
-# Main effects of x1 and x2
+## Main effects of x1 and x2
 
 ```{r}
 
