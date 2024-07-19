@@ -54,14 +54,13 @@ region_fire
 ```
 Region and Category counts
 ```{r}
-data3 <- bernoulli |>
-  apply_labels(Region = "Region")
+data3 <- bernoulli
 table(data3$Region, data3$Category, dnn=c("Region","Name of Category"))
 ```
 ## Bar Graphs
 ```{r}
 df <- as.data.frame(region_fire)
-ggplot(df, aes(x = Region, y = Freq, fill = Occurence.of.fire)) +
+ggplot(df, aes(x = Region, y = Freq, fill = Occurence.of.at.least.one.fire)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(title = "Occurrence of Fire by Region",
        x = "Region",
@@ -96,7 +95,6 @@ filtered <- bernoulli |>
   group_by(Region) |>
   filter(fire == "1") |>
   select(Region,10:24)
-View(average)
 ```
 
 Pivoting

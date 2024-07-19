@@ -212,143 +212,404 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">#View(bernoulli)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Trying with bernoulli data:</p>
-<section id="only-main-effect-for-all-terms" class="level1">
-<h1>Only main effect for all terms</h1>
+<section id="data-analysis" class="level1">
+<h1>Data Analysis</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>model_string <span class="ot">&lt;-</span> <span class="fu">textConnection</span>(<span class="st">"model{</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i in 1:length(y)) {</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="st">      y[i] ~ dbern(p[i])</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="st">      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i] + beta4*x4[i] </span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="st">    #Uninformative Priors:</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="st">    beta0 ~ dnorm(0 ,1/(10)^2 )</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="st">    beta1 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="st">    beta2 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="st">    beta3 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="st">    beta4 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="st">}"</span>)</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Dr. Reich does not standardize the data, but other resource does</span></span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>data_jags <span class="ot">=</span> <span class="fu">list</span>(<span class="at">y=</span>bernoulli<span class="sc">$</span>fire, <span class="at">x1 =</span> bernoulli<span class="sc">$</span>NEAR_DIST, <span class="at">x2 =</span> bernoulli<span class="sc">$</span>Shape_Leng, <span class="at">x3 =</span> bernoulli<span class="sc">$</span>Shape_Area, <span class="at">x4 =</span> bernoulli<span class="sc">$</span>Region)</span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">jags.model</span>(model_string,<span class="at">data =</span> data_jags, <span class="at">n.chains=</span><span class="dv">3</span>,<span class="at">quiet=</span><span class="cn">TRUE</span>)</span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="fu">update</span>(model, <span class="dv">100</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>params  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"beta0"</span>, <span class="st">"beta1"</span>,<span class="st">"beta2"</span>,<span class="st">"beta3"</span>,<span class="st">"beta4"</span>)</span>
-<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">coda.samples</span>(model, </span>
-<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>           <span class="at">variable.names=</span>params, </span>
-<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>           <span class="at">n.iter=</span><span class="dv">1000</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(samples)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Iterations = 1101:2100
-Thinning interval = 1 
-Number of chains = 3 
-Sample size per chain = 1000 
-
-1. Empirical mean and standard deviation for each variable,
-   plus standard error of the mean:
-
-            Mean        SD  Naive SE Time-series SE
-beta0 -2.408e+00 4.043e-01 7.381e-03      5.845e-02
-beta1  2.511e-02 1.202e-02 2.195e-04      7.157e-04
-beta2  1.283e-04 6.559e-05 1.198e-06      8.760e-06
-beta3  1.301e-07 8.381e-08 1.530e-09      9.111e-09
-beta4 -1.720e-01 1.039e-01 1.896e-03      8.997e-03
-
-2. Quantiles for each variable:
-
-            2.5%        25%        50%        75%      97.5%
-beta0 -3.245e+00 -2.674e+00 -2.382e+00 -2.137e+00 -1.635e+00
-beta1  9.419e-04  1.691e-02  2.559e-02  3.376e-02  4.751e-02
-beta2  2.959e-06  8.643e-05  1.263e-04  1.728e-04  2.631e-04
-beta3 -3.702e-08  7.307e-08  1.256e-07  1.865e-07  2.966e-07
-beta4 -3.781e-01 -2.402e-01 -1.733e-01 -1.038e-01  3.872e-02</code></pre>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>DIC    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>DIC</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Mean deviance:  1060 
-penalty 4.796 
-Penalized deviance: 1064 </code></pre>
-</div>
-</div>
+<section id="tables" class="level2">
+<h2 class="anchored" data-anchor-id="tables">Tables</h2>
+<p>Count of fire occurrence by region</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>b0 <span class="ot">&lt;-</span> <span class="fu">c</span>(samples[[<span class="dv">1</span>]][,<span class="dv">1</span>],samples[[<span class="dv">2</span>]][,<span class="dv">1</span>])</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>b1 <span class="ot">&lt;-</span> <span class="fu">c</span>(samples[[<span class="dv">1</span>]][,<span class="dv">2</span>],samples[[<span class="dv">2</span>]][,<span class="dv">2</span>])</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>b2 <span class="ot">&lt;-</span> <span class="fu">c</span>(samples[[<span class="dv">1</span>]][,<span class="dv">3</span>],samples[[<span class="dv">2</span>]][,<span class="dv">3</span>])</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>b3 <span class="ot">&lt;-</span> <span class="fu">c</span>(samples[[<span class="dv">1</span>]][,<span class="dv">4</span>],samples[[<span class="dv">2</span>]][,<span class="dv">4</span>])</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>b4 <span class="ot">&lt;-</span> <span class="fu">c</span>(samples[[<span class="dv">1</span>]][,<span class="dv">5</span>],samples[[<span class="dv">2</span>]][,<span class="dv">5</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>region_fire <span class="ot">&lt;-</span> <span class="fu">table</span>(bernoulli<span class="sc">$</span>Region, bernoulli<span class="sc">$</span>fire)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dimnames</span>(region_fire) <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Region"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"1"</span>, <span class="st">"2"</span>, <span class="st">"3"</span>),</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Occurence of at least one fire"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"No"</span>, <span class="st">"Yes"</span>))</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>region_fire</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      Occurence of at least one fire
+Region  No Yes
+     1 291  85
+     2 417  61
+     3 367  61</code></pre>
+</div>
+</div>
+<p>Region and Category counts</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>data3 <span class="ot">&lt;-</span> bernoulli</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(data3<span class="sc">$</span>Region, data3<span class="sc">$</span>Category, <span class="at">dnn=</span><span class="fu">c</span>(<span class="st">"Region"</span>,<span class="st">"Name of Category"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      Name of Category
+Region Agropolis Agrovila Crossroad Ruropolis
+     1        39      267        70         0
+     2        69      404         5         0
+     3        55      326         8        39</code></pre>
+</div>
 </div>
 </section>
-<section id="prediction" class="level1">
-<h1>Prediction</h1>
+<section id="bar-graphs" class="level2">
+<h2 class="anchored" data-anchor-id="bar-graphs">Bar Graphs</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine results from 3 different chains into one by stacking matrices that contain simulations.</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>mod1_csim <span class="ot">=</span> <span class="fu">as.mcmc</span>(<span class="fu">do.call</span>(rbind, samples))</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract posterior mean of coefficients</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>pm_coef <span class="ot">=</span> <span class="fu">colMeans</span>(mod1_csim)</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co"># The matrix multiplication below gives the exponentiation part in equation which will then be used to find estimated probabilities.</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>predictors <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(bernoulli<span class="sc">$</span>NEAR_DIST, bernoulli<span class="sc">$</span>Shape_Leng, bernoulli<span class="sc">$</span>Shape_Area, bernoulli<span class="sc">$</span>Region), <span class="at">nrow =</span> <span class="dv">1282</span>, <span class="at">ncol =</span> <span class="dv">4</span>)</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>pm_Xb <span class="ot">=</span> pm_coef[<span class="st">"beta0"</span>] <span class="sc">+</span> predictors <span class="sc">%*%</span> pm_coef[<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>] </span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Intercept + Design Matrix*Coefficients</span></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="co"># extract probability (basically undo logit link)</span></span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>phat <span class="ot">=</span> <span class="fl">1.0</span> <span class="sc">/</span> (<span class="fl">1.0</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>pm_Xb))  </span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Predicted probabilities that the Outcome = 1 for each observations</span></span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(phat, <span class="fu">jitter</span>(bernoulli<span class="sc">$</span>fire))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(region_fire)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> Region, <span class="at">y =</span> Freq, <span class="at">fill =</span> Occurence.of.at.least.one.fire)) <span class="sc">+</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Occurrence of Fire by Region"</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Region"</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Count"</span>,</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">fill =</span> <span class="st">"Occurrence of Fire"</span>) <span class="sc">+</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"No"</span> <span class="ot">=</span> <span class="st">"skyblue"</span>, <span class="st">"Yes"</span> <span class="ot">=</span> <span class="st">"maroon"</span>)) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="JAGSattempt_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="JAGSattempt_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(<span class="at">tab0.5 =</span> <span class="fu">table</span>(phat <span class="sc">&gt;</span> <span class="fl">0.5</span>, bernoulli<span class="sc">$</span>fire))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Region 1 appears to have the most fires. We should note that this graph looks skewed because</p>
+<p>Percentage of yes with respect to each region:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>percent <span class="ot">&lt;-</span> bernoulli <span class="sc">|&gt;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Region) <span class="sc">|&gt;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span> (<span class="at">Region =</span> <span class="fu">as.factor</span>(Region)) <span class="sc">|&gt;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">percent =</span> <span class="fu">sum</span>(fire)<span class="sc">/</span> <span class="fu">n</span>() <span class="sc">*</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(percent, <span class="fu">aes</span>(<span class="at">x =</span> Region, <span class="at">y =</span> percent, <span class="at">fill =</span> Region)) <span class="sc">+</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Percentage of Relative Fire Occurences by Region"</span>,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Region"</span>,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Percentage"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="JAGSattempt_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="plots" class="level2">
+<h2 class="anchored" data-anchor-id="plots">Plots</h2>
+<p>Average hectacre of burned area, grouped by region, over time.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>filtered <span class="ot">&lt;-</span> bernoulli <span class="sc">|&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Region) <span class="sc">|&gt;</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(fire <span class="sc">==</span> <span class="st">"1"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Region,<span class="dv">10</span><span class="sc">:</span><span class="dv">24</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Pivoting</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>pivot <span class="ot">&lt;-</span> filtered <span class="sc">|&gt;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"AUG"</span>) <span class="sc">|</span> <span class="fu">starts_with</span>(<span class="st">"JUL"</span>) <span class="sc">|</span> <span class="fu">starts_with</span>(<span class="st">"SEP"</span>),</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"month_year"</span>,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"area_burned"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">substr</span>(month_year, <span class="fu">nchar</span>(month_year) <span class="sc">-</span> <span class="dv">3</span>, <span class="fu">nchar</span>(month_year)),</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>           <span class="at">monthpre =</span> <span class="fu">substr</span>(month_year, <span class="dv">1</span>, <span class="dv">3</span>),</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>           <span class="co"># reordering month for plots</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">month =</span> <span class="fu">factor</span>(monthpre, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"JUL"</span>,<span class="st">"AUG"</span>,<span class="st">"SEP"</span>)),</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>           </span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">Region =</span> <span class="fu">as.factor</span>(Region))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>month_summary <span class="ot">&lt;-</span> pivot <span class="sc">|&gt;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Region,year,month) <span class="sc">|&gt;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">mean_area_burned =</span> (<span class="fu">mean</span>(area_burned, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'Region', 'year'. You can override using
+the `.groups` argument.</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>year_summary <span class="ot">&lt;-</span> pivot <span class="sc">|&gt;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(Region,year) <span class="sc">|&gt;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">mean_area_burned =</span> (<span class="fu">mean</span>(area_burned, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'Region'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(year_summary)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+# Groups:   Region [2]
+  Region year  mean_area_burned
+  &lt;fct&gt;  &lt;chr&gt;            &lt;dbl&gt;
+1 1      2019             5.26 
+2 1      2020             7.12 
+3 1      2021             2.18 
+4 1      2022             2.47 
+5 1      2023             0.592
+6 2      2019             5.89 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(month_summary)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 4
+# Groups:   Region, year [2]
+  Region year  month mean_area_burned
+  &lt;fct&gt;  &lt;chr&gt; &lt;fct&gt;            &lt;dbl&gt;
+1 1      2019  JUL             0.831 
+2 1      2019  AUG            12.6   
+3 1      2019  SEP             4.12  
+4 1      2020  JUL             2.01  
+5 1      2020  AUG             0.0979
+6 1      2020  SEP             9.35  </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(year_summary, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> mean_area_burned, </span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>                         <span class="at">color =</span> Region, <span class="at">group =</span> Region)) <span class="sc">+</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Average Area Burned per Year, Grouped by Region"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="JAGSattempt_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(month_summary, <span class="fu">aes</span>(<span class="at">x =</span> month, <span class="at">y =</span> mean_area_burned, </span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>                         <span class="at">color =</span> year, <span class="at">group =</span> year)) <span class="sc">+</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(year <span class="sc">~</span> Region) <span class="sc">+</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Average Area Burned per Month, Grouped by Year and Region"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 5 rows containing missing values or values outside the scale range
+(`geom_point()`).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 2 rows containing missing values or values outside the scale range
+(`geom_line()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="JAGSattempt_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="boxplots" class="level2">
+<h2 class="anchored" data-anchor-id="boxplots">Boxplots</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>pivot_filtered <span class="ot">&lt;-</span> pivot <span class="sc">|&gt;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(area_burned))</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(pivot_filtered, <span class="fu">aes</span>(<span class="at">x =</span> Region, <span class="at">y =</span> area_burned, <span class="at">fill =</span> Region)) <span class="sc">+</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> year) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="JAGSattempt_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Outlier removal - source: https://sqlpad.io/tutorial/remove-outliers/</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>removeOutliers <span class="ot">&lt;-</span> <span class="cf">function</span>(data, column_name) {</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  Q1 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(data[[column_name]], <span class="fl">0.25</span>)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  Q3 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(data[[column_name]], <span class="fl">0.75</span>)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  IQR <span class="ot">&lt;-</span> Q3 <span class="sc">-</span> Q1</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>  lower_bound <span class="ot">&lt;-</span> Q1 <span class="sc">-</span> <span class="fl">1.5</span> <span class="sc">*</span> IQR</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>  upper_bound <span class="ot">&lt;-</span> Q3 <span class="sc">+</span> <span class="fl">1.5</span> <span class="sc">*</span> IQR</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(data[data[[column_name]] <span class="sc">&gt;=</span> lower_bound <span class="sc">&amp;</span> data[[column_name]] <span class="sc">&lt;=</span> upper_bound, ])</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Applying function:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>boxplot_no_outliers <span class="ot">&lt;-</span> <span class="fu">removeOutliers</span>(<span class="at">data =</span> pivot_filtered, <span class="at">column_name =</span> <span class="st">"area_burned"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(boxplot_no_outliers, <span class="fu">aes</span>(<span class="at">x =</span> Region, <span class="at">y =</span> area_burned, <span class="at">fill =</span> Region)) <span class="sc">+</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> year) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="JAGSattempt_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(boxplot_no_outliers, <span class="fu">aes</span>(<span class="at">x =</span> month, <span class="at">y =</span> area_burned, <span class="at">fill =</span> month)) <span class="sc">+</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="JAGSattempt_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(boxplot_no_outliers, <span class="fu">aes</span>(<span class="at">x =</span> area_burned)) <span class="sc">+</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">bins =</span> <span class="dv">20</span>,               </span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">"lightblue"</span>,   </span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Histogram of Area Burned"</span>, </span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Area Burned"</span>,                       </span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Frequency"</span>) <span class="sc">+</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a> <span class="fu">facet_wrap</span>(<span class="sc">~</span> month)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="JAGSattempt_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="models" class="level1">
+<h1>Models</h1>
+<section id="only-main-effect-for-all-terms" class="level2">
+<h2 class="anchored" data-anchor-id="only-main-effect-for-all-terms">Only main effect for all terms</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>model_string <span class="ot">&lt;-</span> <span class="fu">textConnection</span>(<span class="st">"model{</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i in 1:length(y)) {</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="st">      y[i] ~ dbern(p[i])</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="st">      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i] + beta4*x4[i] </span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="st">    #Uninformative Priors:</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a><span class="st">    beta0 ~ dnorm(0 ,1/(10)^2 )</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a><span class="st">    beta1 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="st">    beta2 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a><span class="st">    beta3 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a><span class="st">    beta4 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a><span class="st">}"</span>)</span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Dr. Reich does not standardize the data, but other resource does</span></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>data_jags <span class="ot">=</span> <span class="fu">list</span>(<span class="at">y=</span>bernoulli<span class="sc">$</span>fire, <span class="at">x1 =</span> bernoulli<span class="sc">$</span>NEAR_DIST, <span class="at">x2 =</span> bernoulli<span class="sc">$</span>Shape_Leng, <span class="at">x3 =</span> bernoulli<span class="sc">$</span>Shape_Area, <span class="at">x4 =</span> bernoulli<span class="sc">$</span>Region)</span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">jags.model</span>(model_string,<span class="at">data =</span> data_jags, <span class="at">n.chains=</span><span class="dv">3</span>,<span class="at">quiet=</span><span class="cn">TRUE</span>)</span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a><span class="fu">update</span>(model, <span class="dv">100</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a>params  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"beta0"</span>, <span class="st">"beta1"</span>,<span class="st">"beta2"</span>,<span class="st">"beta3"</span>,<span class="st">"beta4"</span>)</span>
+<span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">coda.samples</span>(model, </span>
+<span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a>           <span class="at">variable.names=</span>params, </span>
+<span id="cb45-25"><a href="#cb45-25" aria-hidden="true" tabindex="-1"></a>           <span class="at">n.iter=</span><span class="dv">1000</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb45-26"><a href="#cb45-26" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(samples)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Iterations = 1101:2100
+Thinning interval = 1 
+Number of chains = 3 
+Sample size per chain = 1000 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+            Mean        SD  Naive SE Time-series SE
+beta0 -2.374e+00 3.825e-01 6.984e-03      5.434e-02
+beta1  2.450e-02 1.210e-02 2.209e-04      7.548e-04
+beta2  1.253e-04 7.068e-05 1.290e-06      9.920e-06
+beta3  1.325e-07 8.831e-08 1.612e-09      9.504e-09
+beta4 -1.781e-01 1.020e-01 1.862e-03      7.887e-03
+
+2. Quantiles for each variable:
+
+            2.5%        25%        50%        75%      97.5%
+beta0 -3.175e+00 -2.611e+00 -2.353e+00 -2.120e+00 -1.664e+00
+beta1 -3.661e-04  1.662e-02  2.502e-02  3.267e-02  4.761e-02
+beta2  3.244e-06  7.300e-05  1.193e-04  1.714e-04  2.744e-04
+beta3 -4.271e-08  7.187e-08  1.353e-07  1.958e-07  2.973e-07
+beta4 -3.774e-01 -2.485e-01 -1.793e-01 -1.073e-01  2.369e-02</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>DIC    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>DIC</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean deviance:  1059 
+penalty 4.797 
+Penalized deviance: 1064 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>b0 <span class="ot">&lt;-</span> <span class="fu">c</span>(samples[[<span class="dv">1</span>]][,<span class="dv">1</span>],samples[[<span class="dv">2</span>]][,<span class="dv">1</span>])</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>b1 <span class="ot">&lt;-</span> <span class="fu">c</span>(samples[[<span class="dv">1</span>]][,<span class="dv">2</span>],samples[[<span class="dv">2</span>]][,<span class="dv">2</span>])</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>b2 <span class="ot">&lt;-</span> <span class="fu">c</span>(samples[[<span class="dv">1</span>]][,<span class="dv">3</span>],samples[[<span class="dv">2</span>]][,<span class="dv">3</span>])</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>b3 <span class="ot">&lt;-</span> <span class="fu">c</span>(samples[[<span class="dv">1</span>]][,<span class="dv">4</span>],samples[[<span class="dv">2</span>]][,<span class="dv">4</span>])</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>b4 <span class="ot">&lt;-</span> <span class="fu">c</span>(samples[[<span class="dv">1</span>]][,<span class="dv">5</span>],samples[[<span class="dv">2</span>]][,<span class="dv">5</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="prediction" class="level2">
+<h2 class="anchored" data-anchor-id="prediction">Prediction</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine results from 3 different chains into one by stacking matrices that contain simulations.</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>mod1_csim <span class="ot">=</span> <span class="fu">as.mcmc</span>(<span class="fu">do.call</span>(rbind, samples))</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract posterior mean of coefficients</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>pm_coef <span class="ot">=</span> <span class="fu">colMeans</span>(mod1_csim)</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="co"># The matrix multiplication below gives the exponentiation part in equation which will then be used to find estimated probabilities.</span></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>predictors <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(bernoulli<span class="sc">$</span>NEAR_DIST, bernoulli<span class="sc">$</span>Shape_Leng, bernoulli<span class="sc">$</span>Shape_Area, bernoulli<span class="sc">$</span>Region), <span class="at">nrow =</span> <span class="dv">1282</span>, <span class="at">ncol =</span> <span class="dv">4</span>)</span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a>pm_Xb <span class="ot">=</span> pm_coef[<span class="st">"beta0"</span>] <span class="sc">+</span> predictors <span class="sc">%*%</span> pm_coef[<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>] </span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Intercept + Design Matrix*Coefficients</span></span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a><span class="co"># extract probability (basically undo logit link)</span></span>
+<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a>phat <span class="ot">=</span> <span class="fl">1.0</span> <span class="sc">/</span> (<span class="fl">1.0</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>pm_Xb))  </span>
+<span id="cb50-16"><a href="#cb50-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Predicted probabilities that the Outcome = 1 for each observations</span></span>
+<span id="cb50-17"><a href="#cb50-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-18"><a href="#cb50-18" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(phat, <span class="fu">jitter</span>(bernoulli<span class="sc">$</span>fire))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="JAGSattempt_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>(<span class="at">tab0.5 =</span> <span class="fu">table</span>(phat <span class="sc">&gt;</span> <span class="fl">0.5</span>, bernoulli<span class="sc">$</span>fire))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       
            0    1
-  FALSE   22    2
-  TRUE  1053  205</code></pre>
+  FALSE   22    3
+  TRUE  1053  204</code></pre>
 </div>
 </div>
 </section>
-<section id="main-effects-of-first-three-vars" class="level1">
-<h1>Main effects of first three vars</h1>
+<section id="main-effects-of-first-three-vars" class="level2">
+<h2 class="anchored" data-anchor-id="main-effects-of-first-three-vars">Main effects of first three vars</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>model_string2 <span class="ot">&lt;-</span> <span class="fu">textConnection</span>(<span class="st">"model{</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i in 1:length(y)) {</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="st">      y[i] ~ dbern(p[i])</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="st">      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i]</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="st">    #Uninformative Priors:</span></span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="st">    beta0 ~ dnorm(0 ,1/(10)^2 )</span></span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="st">    beta1 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="st">    beta2 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="st">    beta3 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="st">}"</span>)</span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Dr. Reich does not standardize the data, but other resource does</span></span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>data_jags2 <span class="ot">=</span> <span class="fu">list</span>(<span class="at">y=</span>bernoulli<span class="sc">$</span>fire, <span class="at">x1 =</span> bernoulli<span class="sc">$</span>NEAR_DIST, <span class="at">x2 =</span> bernoulli<span class="sc">$</span>Shape_Leng, <span class="at">x3 =</span> bernoulli<span class="sc">$</span>Shape_Area)</span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>model2 <span class="ot">&lt;-</span> <span class="fu">jags.model</span>(model_string2,<span class="at">data =</span> data_jags2, <span class="at">n.chains=</span><span class="dv">3</span>,<span class="at">quiet=</span><span class="cn">TRUE</span>)</span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a><span class="fu">update</span>(model2, <span class="dv">100</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>params2  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"beta0"</span>, <span class="st">"beta1"</span>,<span class="st">"beta2"</span>,<span class="st">"beta3"</span>)</span>
-<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>samples2 <span class="ot">&lt;-</span> <span class="fu">coda.samples</span>(model2, </span>
-<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>           <span class="at">variable.names=</span>params2, </span>
-<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>           <span class="at">n.iter=</span><span class="dv">1000</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(samples2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>model_string2 <span class="ot">&lt;-</span> <span class="fu">textConnection</span>(<span class="st">"model{</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i in 1:length(y)) {</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="st">      y[i] ~ dbern(p[i])</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="st">      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i]</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a><span class="st">    #Uninformative Priors:</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="st">    beta0 ~ dnorm(0 ,1/(10)^2 )</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="st">    beta1 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a><span class="st">    beta2 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a><span class="st">    beta3 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a><span class="st">}"</span>)</span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Dr. Reich does not standardize the data, but other resource does</span></span>
+<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-16"><a href="#cb53-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-17"><a href="#cb53-17" aria-hidden="true" tabindex="-1"></a>data_jags2 <span class="ot">=</span> <span class="fu">list</span>(<span class="at">y=</span>bernoulli<span class="sc">$</span>fire, <span class="at">x1 =</span> bernoulli<span class="sc">$</span>NEAR_DIST, <span class="at">x2 =</span> bernoulli<span class="sc">$</span>Shape_Leng, <span class="at">x3 =</span> bernoulli<span class="sc">$</span>Shape_Area)</span>
+<span id="cb53-18"><a href="#cb53-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-19"><a href="#cb53-19" aria-hidden="true" tabindex="-1"></a>model2 <span class="ot">&lt;-</span> <span class="fu">jags.model</span>(model_string2,<span class="at">data =</span> data_jags2, <span class="at">n.chains=</span><span class="dv">3</span>,<span class="at">quiet=</span><span class="cn">TRUE</span>)</span>
+<span id="cb53-20"><a href="#cb53-20" aria-hidden="true" tabindex="-1"></a><span class="fu">update</span>(model2, <span class="dv">100</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb53-21"><a href="#cb53-21" aria-hidden="true" tabindex="-1"></a>params2  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"beta0"</span>, <span class="st">"beta1"</span>,<span class="st">"beta2"</span>,<span class="st">"beta3"</span>)</span>
+<span id="cb53-22"><a href="#cb53-22" aria-hidden="true" tabindex="-1"></a>samples2 <span class="ot">&lt;-</span> <span class="fu">coda.samples</span>(model2, </span>
+<span id="cb53-23"><a href="#cb53-23" aria-hidden="true" tabindex="-1"></a>           <span class="at">variable.names=</span>params2, </span>
+<span id="cb53-24"><a href="#cb53-24" aria-hidden="true" tabindex="-1"></a>           <span class="at">n.iter=</span><span class="dv">1000</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb53-25"><a href="#cb53-25" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(samples2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Iterations = 1101:2100
@@ -360,157 +621,154 @@ Sample size per chain = 1000
    plus standard error of the mean:
 
             Mean        SD  Naive SE Time-series SE
-beta0 -2.888e+00 2.927e-01 5.345e-03      3.063e-02
-beta1  2.818e-02 1.311e-02 2.393e-04      8.723e-04
-beta2  1.581e-04 7.142e-05 1.304e-06      1.048e-05
-beta3  9.710e-08 8.852e-08 1.616e-09      1.112e-08
+beta0 -2.968e+00 2.851e-01 5.205e-03      2.948e-02
+beta1  2.842e-02 1.148e-02 2.095e-04      6.913e-04
+beta2  1.796e-04 6.835e-05 1.248e-06      9.581e-06
+beta3  7.317e-08 8.545e-08 1.560e-09      8.398e-09
 
 2. Quantiles for each variable:
 
             2.5%        25%        50%        75%      97.5%
-beta0 -3.444e+00 -3.083e+00 -2.879e+00 -2.698e+00 -2.298e+00
-beta1  2.429e-03  1.926e-02  2.842e-02  3.708e-02  5.312e-02
-beta2  6.208e-06  1.137e-04  1.637e-04  2.059e-04  2.862e-04
-beta3 -5.335e-08  3.749e-08  8.773e-08  1.486e-07  2.963e-07</code></pre>
+beta0 -3.542e+00 -3.163e+00 -2.966e+00 -2.775e+00 -2.423e+00
+beta1  5.956e-03  2.050e-02  2.831e-02  3.617e-02  5.128e-02
+beta2  4.845e-05  1.308e-04  1.774e-04  2.284e-04  3.109e-04
+beta3 -8.886e-08  1.463e-08  7.027e-08  1.300e-07  2.483e-07</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>DIC2    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model2,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>DIC2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Mean deviance:  1062 
-penalty 3.968 
-Penalized deviance: 1066 </code></pre>
-</div>
-</div>
-</section>
-<section id="that-raised-dic-slightly." class="level1">
-<h1>That raised DIC slightly….</h1>
-</section>
-<section id="so-lets-try-model-with-main-effects-for-near_dist-shape-length-and-region" class="level1">
-<h1>So let’s try model with main effects for NEAR_DIST, shape length, and region</h1>
-</section>
-<section id="main-effects-of-x1-x2-and-x4" class="level1">
-<h1>Main effects of x1, x2, and x4</h1>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>model_string3 <span class="ot">&lt;-</span> <span class="fu">textConnection</span>(<span class="st">"model{</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i in 1:length(y)) {</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="st">      y[i] ~ dbern(p[i])</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="st">      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x4[i]</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="st">    #Uninformative Priors:</span></span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="st">    beta0 ~ dnorm(0 ,1/(10)^2 )</span></span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="st">    beta1 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="st">    beta2 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="st">    beta3 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a><span class="st">}"</span>)</span>
-<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Dr. Reich does not standardize the data, but other resource does</span></span>
-<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>data_jags3 <span class="ot">=</span> <span class="fu">list</span>(<span class="at">y=</span>bernoulli<span class="sc">$</span>fire, <span class="at">x1 =</span> bernoulli<span class="sc">$</span>NEAR_DIST, <span class="at">x2 =</span> bernoulli<span class="sc">$</span>Shape_Leng, <span class="at">x4 =</span> bernoulli<span class="sc">$</span>Region)</span>
-<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>model3 <span class="ot">&lt;-</span> <span class="fu">jags.model</span>(model_string3,<span class="at">data =</span> data_jags3, <span class="at">n.chains=</span><span class="dv">3</span>,<span class="at">quiet=</span><span class="cn">TRUE</span>)</span>
-<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a><span class="fu">update</span>(model3, <span class="dv">100</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>params3  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"beta0"</span>, <span class="st">"beta1"</span>,<span class="st">"beta2"</span>,<span class="st">"beta3"</span>)</span>
-<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>samples3 <span class="ot">&lt;-</span> <span class="fu">coda.samples</span>(model3, </span>
-<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>           <span class="at">variable.names=</span>params3, </span>
-<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>           <span class="at">n.iter=</span><span class="dv">1000</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(samples3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Iterations = 1101:2100
-Thinning interval = 1 
-Number of chains = 3 
-Sample size per chain = 1000 
-
-1. Empirical mean and standard deviation for each variable,
-   plus standard error of the mean:
-
-            Mean        SD  Naive SE Time-series SE
-beta0 -2.7170740 2.918e-01 5.327e-03      2.983e-02
-beta1  0.0236009 1.101e-02 2.011e-04      6.040e-04
-beta2  0.0002188 2.981e-05 5.442e-07      1.891e-06
-beta3 -0.1534667 9.412e-02 1.718e-03      6.646e-03
-
-2. Quantiles for each variable:
-
-            2.5%        25%        50%        75%      97.5%
-beta0 -3.3554066 -2.8932983 -2.7064663 -2.5152190 -2.1532769
-beta1  0.0020632  0.0162814  0.0235920  0.0313296  0.0441990
-beta2  0.0001621  0.0001985  0.0002184  0.0002387  0.0002765
-beta3 -0.3263799 -0.2200304 -0.1545629 -0.0905722  0.0295435</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>DIC3    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model3,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>DIC3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Mean deviance:  1060 
-penalty 3.994 
-Penalized deviance: 1064 </code></pre>
-</div>
-</div>
-</section>
-<section id="main-effects-of-x1-and-x2" class="level1">
-<h1>Main effects of x1 and x2</h1>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>model_string4 <span class="ot">&lt;-</span> <span class="fu">textConnection</span>(<span class="st">"model{</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i in 1:length(y)) {</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="st">      y[i] ~ dbern(p[i])</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="st">      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i]</span></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="st">    #Uninformative Priors:</span></span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="st">    beta0 ~ dnorm(0 ,1/(10)^2 )</span></span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a><span class="st">    beta1 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a><span class="st">    beta2 ~ dnorm(0, 1/(10)^2)</span></span>
-<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a><span class="st">}"</span>)</span>
-<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Dr. Reich does not standardize the data, but other resource does</span></span>
-<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>data_jags4 <span class="ot">=</span> <span class="fu">list</span>(<span class="at">y=</span>bernoulli<span class="sc">$</span>fire, <span class="at">x1 =</span> bernoulli<span class="sc">$</span>NEAR_DIST, <span class="at">x2 =</span> bernoulli<span class="sc">$</span>Shape_Leng)</span>
-<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>model4 <span class="ot">&lt;-</span> <span class="fu">jags.model</span>(model_string4,<span class="at">data =</span> data_jags4, <span class="at">n.chains=</span><span class="dv">3</span>,<span class="at">quiet=</span><span class="cn">TRUE</span>)</span>
-<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a><span class="fu">update</span>(model4, <span class="dv">100</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>params4  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"beta0"</span>, <span class="st">"beta1"</span>,<span class="st">"beta2"</span>)</span>
-<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>samples4 <span class="ot">&lt;-</span> <span class="fu">coda.samples</span>(model4, </span>
-<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>           <span class="at">variable.names=</span>params4, </span>
-<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>           <span class="at">n.iter=</span><span class="dv">1000</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(samples4)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Iterations = 1101:2100
-Thinning interval = 1 
-Number of chains = 3 
-Sample size per chain = 1000 
-
-1. Empirical mean and standard deviation for each variable,
-   plus standard error of the mean:
-
-            Mean        SD  Naive SE Time-series SE
-beta0 -3.0859847 2.097e-01 3.828e-03      1.598e-02
-beta1  0.0267491 1.192e-02 2.176e-04      6.984e-04
-beta2  0.0002254 3.215e-05 5.870e-07      2.185e-06
-
-2. Quantiles for each variable:
-
-            2.5%        25%        50%        75%      97.5%
-beta0 -3.4997347 -3.2331194 -3.0832980 -2.9385391 -2.6928104
-beta1  0.0029333  0.0188619  0.0270303  0.0341435  0.0514142
-beta2  0.0001659  0.0002029  0.0002241  0.0002472  0.0002902</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>DIC4    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model4,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>DIC4</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>DIC2    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model2,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>DIC2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Mean deviance:  1061 
-penalty 2.957 
+penalty 3.771 
+Penalized deviance: 1065 </code></pre>
+</div>
+</div>
+<p>That raised DIC slightly….<br>
+So let’s try model with main effects for NEAR_DIST, shape length, and region</p>
+</section>
+<section id="main-effects-of-x1-x2-and-x4" class="level2">
+<h2 class="anchored" data-anchor-id="main-effects-of-x1-x2-and-x4">Main effects of x1, x2, and x4</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>model_string3 <span class="ot">&lt;-</span> <span class="fu">textConnection</span>(<span class="st">"model{</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i in 1:length(y)) {</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="st">      y[i] ~ dbern(p[i])</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="st">      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x4[i]</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="st">    #Uninformative Priors:</span></span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a><span class="st">    beta0 ~ dnorm(0 ,1/(10)^2 )</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a><span class="st">    beta1 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a><span class="st">    beta2 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a><span class="st">    beta3 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a><span class="st">}"</span>)</span>
+<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Dr. Reich does not standardize the data, but other resource does</span></span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a>data_jags3 <span class="ot">=</span> <span class="fu">list</span>(<span class="at">y=</span>bernoulli<span class="sc">$</span>fire, <span class="at">x1 =</span> bernoulli<span class="sc">$</span>NEAR_DIST, <span class="at">x2 =</span> bernoulli<span class="sc">$</span>Shape_Leng, <span class="at">x4 =</span> bernoulli<span class="sc">$</span>Region)</span>
+<span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-19"><a href="#cb57-19" aria-hidden="true" tabindex="-1"></a>model3 <span class="ot">&lt;-</span> <span class="fu">jags.model</span>(model_string3,<span class="at">data =</span> data_jags3, <span class="at">n.chains=</span><span class="dv">3</span>,<span class="at">quiet=</span><span class="cn">TRUE</span>)</span>
+<span id="cb57-20"><a href="#cb57-20" aria-hidden="true" tabindex="-1"></a><span class="fu">update</span>(model3, <span class="dv">100</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb57-21"><a href="#cb57-21" aria-hidden="true" tabindex="-1"></a>params3  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"beta0"</span>, <span class="st">"beta1"</span>,<span class="st">"beta2"</span>,<span class="st">"beta3"</span>)</span>
+<span id="cb57-22"><a href="#cb57-22" aria-hidden="true" tabindex="-1"></a>samples3 <span class="ot">&lt;-</span> <span class="fu">coda.samples</span>(model3, </span>
+<span id="cb57-23"><a href="#cb57-23" aria-hidden="true" tabindex="-1"></a>           <span class="at">variable.names=</span>params3, </span>
+<span id="cb57-24"><a href="#cb57-24" aria-hidden="true" tabindex="-1"></a>           <span class="at">n.iter=</span><span class="dv">1000</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb57-25"><a href="#cb57-25" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(samples3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Iterations = 1101:2100
+Thinning interval = 1 
+Number of chains = 3 
+Sample size per chain = 1000 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+            Mean        SD  Naive SE Time-series SE
+beta0 -2.7553549 0.3351690 6.119e-03      4.205e-02
+beta1  0.0243416 0.0118825 2.169e-04      7.392e-04
+beta2  0.0002209 0.0000323 5.898e-07      2.242e-06
+beta3 -0.1442038 0.0982130 1.793e-03      8.164e-03
+
+2. Quantiles for each variable:
+
+            2.5%        25%        50%        75%      97.5%
+beta0 -3.3975242 -2.9863746 -2.7651591 -2.5410474 -2.0669048
+beta1 -0.0004262  0.0165536  0.0244674  0.0324021  0.0470391
+beta2  0.0001573  0.0001998  0.0002202  0.0002428  0.0002868
+beta3 -0.3402165 -0.2108428 -0.1393881 -0.0784966  0.0460610</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>DIC3    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model3,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>DIC3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean deviance:  1060 
+penalty 3.868 
+Penalized deviance: 1064 </code></pre>
+</div>
+</div>
+</section>
+<section id="main-effects-of-x1-and-x2" class="level2">
+<h2 class="anchored" data-anchor-id="main-effects-of-x1-and-x2">Main effects of x1 and x2</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>model_string4 <span class="ot">&lt;-</span> <span class="fu">textConnection</span>(<span class="st">"model{</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i in 1:length(y)) {</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="st">      y[i] ~ dbern(p[i])</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="st">      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i]</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a><span class="st">    #Uninformative Priors:</span></span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a><span class="st">    beta0 ~ dnorm(0 ,1/(10)^2 )</span></span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a><span class="st">    beta1 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a><span class="st">    beta2 ~ dnorm(0, 1/(10)^2)</span></span>
+<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-11"><a href="#cb61-11" aria-hidden="true" tabindex="-1"></a><span class="st">}"</span>)</span>
+<span id="cb61-12"><a href="#cb61-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-13"><a href="#cb61-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Dr. Reich does not standardize the data, but other resource does</span></span>
+<span id="cb61-14"><a href="#cb61-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-15"><a href="#cb61-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-16"><a href="#cb61-16" aria-hidden="true" tabindex="-1"></a>data_jags4 <span class="ot">=</span> <span class="fu">list</span>(<span class="at">y=</span>bernoulli<span class="sc">$</span>fire, <span class="at">x1 =</span> bernoulli<span class="sc">$</span>NEAR_DIST, <span class="at">x2 =</span> bernoulli<span class="sc">$</span>Shape_Leng)</span>
+<span id="cb61-17"><a href="#cb61-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-18"><a href="#cb61-18" aria-hidden="true" tabindex="-1"></a>model4 <span class="ot">&lt;-</span> <span class="fu">jags.model</span>(model_string4,<span class="at">data =</span> data_jags4, <span class="at">n.chains=</span><span class="dv">3</span>,<span class="at">quiet=</span><span class="cn">TRUE</span>)</span>
+<span id="cb61-19"><a href="#cb61-19" aria-hidden="true" tabindex="-1"></a><span class="fu">update</span>(model4, <span class="dv">100</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb61-20"><a href="#cb61-20" aria-hidden="true" tabindex="-1"></a>params4  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"beta0"</span>, <span class="st">"beta1"</span>,<span class="st">"beta2"</span>)</span>
+<span id="cb61-21"><a href="#cb61-21" aria-hidden="true" tabindex="-1"></a>samples4 <span class="ot">&lt;-</span> <span class="fu">coda.samples</span>(model4, </span>
+<span id="cb61-22"><a href="#cb61-22" aria-hidden="true" tabindex="-1"></a>           <span class="at">variable.names=</span>params4, </span>
+<span id="cb61-23"><a href="#cb61-23" aria-hidden="true" tabindex="-1"></a>           <span class="at">n.iter=</span><span class="dv">1000</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb61-24"><a href="#cb61-24" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(samples4)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Iterations = 1101:2100
+Thinning interval = 1 
+Number of chains = 3 
+Sample size per chain = 1000 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+            Mean        SD  Naive SE Time-series SE
+beta0 -3.0990700 2.113e-01 3.857e-03      1.564e-02
+beta1  0.0277867 1.136e-02 2.074e-04      6.176e-04
+beta2  0.0002255 3.269e-05 5.969e-07      2.264e-06
+
+2. Quantiles for each variable:
+
+            2.5%        25%        50%        75%    97.5%
+beta0 -3.4985769 -3.2444657 -3.0957116 -2.9583834 -2.67343
+beta1  0.0048955  0.0199480  0.0278047  0.0352880  0.05048
+beta2  0.0001619  0.0002039  0.0002249  0.0002465  0.00029</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>DIC4    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model4,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>DIC4</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean deviance:  1061 
+penalty 3.057 
 Penalized deviance: 1064 </code></pre>
 </div>
 </div>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
