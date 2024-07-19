@@ -1,5 +1,5 @@
 ---
-title: "Eliza Norman 7/1"
+title: "Fire Determinant Project"
 format: html
 editor: visual
 ---

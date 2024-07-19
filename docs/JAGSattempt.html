@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Eliza Norman 7/1</title>
+<title>Fire Determinant Project</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -116,7 +116,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Eliza Norman 7/1</h1>
+<h1 class="title">Fire Determinant Project</h1>
 </div>
 
 
@@ -513,28 +513,28 @@ Sample size per chain = 1000
    plus standard error of the mean:
 
             Mean        SD  Naive SE Time-series SE
-beta0 -2.374e+00 3.825e-01 6.984e-03      5.434e-02
-beta1  2.450e-02 1.210e-02 2.209e-04      7.548e-04
-beta2  1.253e-04 7.068e-05 1.290e-06      9.920e-06
-beta3  1.325e-07 8.831e-08 1.612e-09      9.504e-09
-beta4 -1.781e-01 1.020e-01 1.862e-03      7.887e-03
+beta0 -2.357e+00 4.304e-01 7.858e-03      5.881e-02
+beta1  2.457e-02 1.232e-02 2.250e-04      7.808e-04
+beta2  1.185e-04 7.441e-05 1.359e-06      1.067e-05
+beta3  1.405e-07 9.306e-08 1.699e-09      1.052e-08
+beta4 -1.754e-01 1.087e-01 1.985e-03      9.343e-03
 
 2. Quantiles for each variable:
 
             2.5%        25%        50%        75%      97.5%
-beta0 -3.175e+00 -2.611e+00 -2.353e+00 -2.120e+00 -1.664e+00
-beta1 -3.661e-04  1.662e-02  2.502e-02  3.267e-02  4.761e-02
-beta2  3.244e-06  7.300e-05  1.193e-04  1.714e-04  2.744e-04
-beta3 -4.271e-08  7.187e-08  1.353e-07  1.958e-07  2.973e-07
-beta4 -3.774e-01 -2.485e-01 -1.793e-01 -1.073e-01  2.369e-02</code></pre>
+beta0 -3.304e+00 -2.602e+00 -2.332e+00 -2.109e+00 -1.517e+00
+beta1 -1.423e-03  1.668e-02  2.505e-02  3.310e-02  4.782e-02
+beta2 -1.579e-05  6.718e-05  1.137e-04  1.656e-04  2.779e-04
+beta3 -4.352e-08  7.792e-08  1.411e-07  2.032e-07  3.212e-07
+beta4 -3.942e-01 -2.476e-01 -1.754e-01 -1.047e-01  4.117e-02</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
 <span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>DIC    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
 <span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>DIC</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Mean deviance:  1059 
-penalty 4.797 
-Penalized deviance: 1064 </code></pre>
+<pre><code>Mean deviance:  1060 
+penalty 5.367 
+Penalized deviance: 1065 </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -621,26 +621,26 @@ Sample size per chain = 1000
    plus standard error of the mean:
 
             Mean        SD  Naive SE Time-series SE
-beta0 -2.968e+00 2.851e-01 5.205e-03      2.948e-02
-beta1  2.842e-02 1.148e-02 2.095e-04      6.913e-04
-beta2  1.796e-04 6.835e-05 1.248e-06      9.581e-06
-beta3  7.317e-08 8.545e-08 1.560e-09      8.398e-09
+beta0 -2.928e+00 2.783e-01 5.081e-03      2.879e-02
+beta1  2.872e-02 1.164e-02 2.126e-04      6.918e-04
+beta2  1.682e-04 6.646e-05 1.213e-06      9.395e-06
+beta3  8.511e-08 8.513e-08 1.554e-09      9.503e-09
 
 2. Quantiles for each variable:
 
             2.5%        25%        50%        75%      97.5%
-beta0 -3.542e+00 -3.163e+00 -2.966e+00 -2.775e+00 -2.423e+00
-beta1  5.956e-03  2.050e-02  2.831e-02  3.617e-02  5.128e-02
-beta2  4.845e-05  1.308e-04  1.774e-04  2.284e-04  3.109e-04
-beta3 -8.886e-08  1.463e-08  7.027e-08  1.300e-07  2.483e-07</code></pre>
+beta0 -3.549e+00 -3.095e+00 -2.919e+00 -2.747e+00 -2.390e+00
+beta1  6.650e-03  2.102e-02  2.843e-02  3.636e-02  5.170e-02
+beta2  3.992e-05  1.250e-04  1.651e-04  2.086e-04  3.161e-04
+beta3 -8.020e-08  2.840e-08  8.539e-08  1.395e-07  2.574e-07</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
 <span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>DIC2    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model2,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
 <span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>DIC2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Mean deviance:  1061 
-penalty 3.771 
-Penalized deviance: 1065 </code></pre>
+<pre><code>Mean deviance:  1062 
+penalty 4.401 
+Penalized deviance: 1066 </code></pre>
 </div>
 </div>
 <p>That raised DIC slightly….<br>
@@ -685,25 +685,25 @@ Sample size per chain = 1000
    plus standard error of the mean:
 
             Mean        SD  Naive SE Time-series SE
-beta0 -2.7553549 0.3351690 6.119e-03      4.205e-02
-beta1  0.0243416 0.0118825 2.169e-04      7.392e-04
-beta2  0.0002209 0.0000323 5.898e-07      2.242e-06
-beta3 -0.1442038 0.0982130 1.793e-03      8.164e-03
+beta0 -2.7581787 3.270e-01 5.971e-03      3.847e-02
+beta1  0.0231639 1.169e-02 2.134e-04      7.101e-04
+beta2  0.0002234 3.133e-05 5.719e-07      2.030e-06
+beta3 -0.1415637 1.072e-01 1.957e-03      9.194e-03
 
 2. Quantiles for each variable:
 
             2.5%        25%        50%        75%      97.5%
-beta0 -3.3975242 -2.9863746 -2.7651591 -2.5410474 -2.0669048
-beta1 -0.0004262  0.0165536  0.0244674  0.0324021  0.0470391
-beta2  0.0001573  0.0001998  0.0002202  0.0002428  0.0002868
-beta3 -0.3402165 -0.2108428 -0.1393881 -0.0784966  0.0460610</code></pre>
+beta0 -3.3827982 -2.9776423 -2.7623603 -2.5517618 -2.0203199
+beta1  0.0003012  0.0152340  0.0229736  0.0311632  0.0461147
+beta2  0.0001619  0.0002019  0.0002236  0.0002453  0.0002825
+beta3 -0.3516355 -0.2125180 -0.1396427 -0.0683358  0.0626193</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
 <span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>DIC3    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model3,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
 <span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>DIC3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Mean deviance:  1060 
-penalty 3.868 
+<pre><code>Mean deviance:  1061 
+penalty 3.933 
 Penalized deviance: 1064 </code></pre>
 </div>
 </div>
@@ -746,23 +746,23 @@ Sample size per chain = 1000
    plus standard error of the mean:
 
             Mean        SD  Naive SE Time-series SE
-beta0 -3.0990700 2.113e-01 3.857e-03      1.564e-02
-beta1  0.0277867 1.136e-02 2.074e-04      6.176e-04
-beta2  0.0002255 3.269e-05 5.969e-07      2.264e-06
+beta0 -3.0922451 2.108e-01 3.849e-03      1.540e-02
+beta1  0.0268819 1.096e-02 2.000e-04      5.902e-04
+beta2  0.0002266 3.304e-05 6.033e-07      2.202e-06
 
 2. Quantiles for each variable:
 
-            2.5%        25%        50%        75%    97.5%
-beta0 -3.4985769 -3.2444657 -3.0957116 -2.9583834 -2.67343
-beta1  0.0048955  0.0199480  0.0278047  0.0352880  0.05048
-beta2  0.0001619  0.0002039  0.0002249  0.0002465  0.00029</code></pre>
+            2.5%        25%        50%        75%      97.5%
+beta0 -3.4904193 -3.2403649 -3.0943805 -2.9449044 -2.6705632
+beta1  0.0047662  0.0195415  0.0268518  0.0343088  0.0480239
+beta2  0.0001603  0.0002049  0.0002275  0.0002482  0.0002921</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute DIC - n.iter needs to be the same above and below</span></span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>DIC4    <span class="ot">&lt;-</span> <span class="fu">dic.samples</span>(model4,<span class="at">n.iter=</span><span class="dv">1000</span>,<span class="at">n.thin =</span> <span class="dv">5</span>, <span class="at">progress.bar=</span><span class="st">"none"</span>)</span>
 <span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>DIC4</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Mean deviance:  1061 
-penalty 3.057 
+penalty 2.708 
 Penalized deviance: 1064 </code></pre>
 </div>
 </div>
