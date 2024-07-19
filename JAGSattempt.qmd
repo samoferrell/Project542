@@ -199,7 +199,7 @@ ggplot(boxplot_no_outliers, aes(x = area_burned)) +
     bins = 20,               
     fill = "lightblue",   
     color = "black") +
-  labs(title = "Histogram of Example Data", 
+  labs(title = "Histogram of Area Burned", 
        x = "Area Burned",                       
        y = "Frequency") +
  facet_wrap(~ month)
