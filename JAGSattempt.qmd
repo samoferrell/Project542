@@ -40,11 +40,15 @@ bernoulli <- data |>
 Trying with bernoulli data:
 
 # Data Analysis
+
 ```{r}
 library(ggplot2)
 ```
+
 ## Tables
+
 Count of fire occurrence by region
+
 ```{r}
 region_fire <- table(bernoulli$Region, bernoulli$fire)
 dimnames(region_fire) <- list(
@@ -52,12 +56,16 @@ dimnames(region_fire) <- list(
   "Occurence of at least one fire" = c("No", "Yes"))
 region_fire
 ```
+
 Region and Category counts
+
 ```{r}
 data3 <- bernoulli
 table(data3$Region, data3$Category, dnn=c("Region","Name of Category"))
 ```
+
 ## Bar Graphs
+
 ```{r}
 df <- as.data.frame(region_fire)
 ggplot(df, aes(x = Region, y = Freq, fill = Occurence.of.at.least.one.fire)) +
@@ -73,6 +81,7 @@ ggplot(df, aes(x = Region, y = Freq, fill = Occurence.of.at.least.one.fire)) +
 Region 1 appears to have the most fires. We should note that this graph looks skewed because
 
 Percentage of yes with respect to each region:
+
 ```{r}
 library(tidyverse)
 percent <- bernoulli |>
@@ -88,8 +97,11 @@ ggplot(percent, aes(x = Region, y = percent, fill = Region)) +
        x = "Region",
        y = "Percentage") 
 ```
+
 ## Plots
-Average hectacre of burned area, grouped by region, over time. 
+
+Average hectacre of burned area, grouped by region, over time.
+
 ```{r}
 filtered <- bernoulli |>
   group_by(Region) |>
@@ -98,6 +110,7 @@ filtered <- bernoulli |>
 ```
 
 Pivoting
+
 ```{r}
 pivot <- filtered |>
   pivot_longer(
@@ -125,11 +138,11 @@ year_summary <- pivot |>
     summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE)))
 ```
 
-
 ```{r}
 head(year_summary)
 head(month_summary)
 ```
+
 ```{r}
 ggplot(year_summary, aes(x = year, y = mean_area_burned, 
                          color = Region, group = Region)) +
@@ -137,8 +150,6 @@ ggplot(year_summary, aes(x = year, y = mean_area_burned,
   geom_line() +
   labs(title = "Average Area Burned per Year, Grouped by Region")
 ```
-
-
 
 ```{r}
 ggplot(month_summary, aes(x = month, y = mean_area_burned, 
@@ -148,9 +159,6 @@ ggplot(month_summary, aes(x = month, y = mean_area_burned,
   facet_grid(year ~ Region) +
   labs(title = "Average Area Burned per Month, Grouped by Year and Region")
 ```
-
-
-
 
 ## Boxplots
 
@@ -162,8 +170,8 @@ ggplot(pivot_filtered, aes(x = Region, y = area_burned, fill = Region)) +
   facet_wrap(~ year) 
 ```
 
-
 Outlier removal - source: https://sqlpad.io/tutorial/remove-outliers/
+
 ```{r}
 removeOutliers <- function(data, column_name) {
   Q1 <- quantile(data[[column_name]], 0.25)
@@ -176,6 +184,7 @@ removeOutliers <- function(data, column_name) {
 ```
 
 Applying function:
+
 ```{r}
 boxplot_no_outliers <- removeOutliers(data = pivot_filtered, column_name = "area_burned")
 ```
@@ -203,10 +212,10 @@ ggplot(boxplot_no_outliers, aes(x = area_burned)) +
  facet_wrap(~ month)
 ```
 
-
 # Models
 
 ## Only main effect for all terms
+
 ```{r}
 
 model_string <- textConnection("model{
@@ -241,8 +250,6 @@ DIC    <- dic.samples(model,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC
 ```
 
-
-
 ```{r}
 b0 <- c(samples[[1]][,1],samples[[2]][,1])
 b1 <- c(samples[[1]][,2],samples[[2]][,2])
@@ -274,7 +281,6 @@ phat = 1.0 / (1.0 + exp(-pm_Xb))
 plot(phat, jitter(bernoulli$fire))
 (tab0.5 = table(phat > 0.5, bernoulli$fire))
 ```
-
 
 ## Main effects of first three vars
 
@@ -310,9 +316,7 @@ DIC2    <- dic.samples(model2,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC2
 ```
 
-
-
-That raised DIC slightly....  
+That raised DIC slightly....\
 So let's try model with main effects for NEAR_DIST, shape length, and region
 
 ## Main effects of x1, x2, and x4
@@ -349,7 +353,6 @@ DIC3    <- dic.samples(model3,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC3
 ```
 
-
 ## Main effects of x1 and x2
 
 ```{r}
@@ -360,10 +363,9 @@ model_string4 <- textConnection("model{
       logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i]
     }
     #Uninformative Priors:
-    beta0 ~ dnorm(0 ,1/(10)^2 )
+    beta0 ~ dnorm(0 ,1/(10)^2)
     beta1 ~ dnorm(0, 1/(10)^2)
     beta2 ~ dnorm(0, 1/(10)^2)
-
 }")
 
 # Dr. Reich does not standardize the data, but other resource does
@@ -382,3 +384,37 @@ summary(samples4)
 DIC4    <- dic.samples(model4,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC4
 ```
+
+## Adding an Interaction Term into Model
+
+```{r}
+model_string5 <- textConnection("model{
+    for (i in 1:length(y)) {
+      y[i] ~ dbern(p[i])
+      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i]
+    }
+    #Uninformative Priors:
+    beta0 ~ dnorm(0 ,1/(10)^2)
+    beta1 ~ dnorm(0, 1/(10)^2)
+    beta2 ~ dnorm(0, 1/(10)^2)
+    beta3 ~ dnorm(0, 1/(10)^2)
+
+}")
+
+# Dr. Reich does not standardize the data, but other resource does
+
+
+data_jags5 = list(y=bernoulli$fire, x1 = bernoulli$NEAR_DIST, x2 = bernoulli$Shape_Leng, x3 = bernoulli$Shape_Leng*bernoulli$NEAR_DIST)
+
+model5 <- jags.model(model_string5,data = data_jags5, n.chains=3,quiet=TRUE)
+update(model5, 100, progress.bar="none")
+params5  <- c("beta0", "beta1","beta2", "beta3")
+samples5 <- coda.samples(model5, 
+           variable.names=params5, 
+           n.iter=1000, progress.bar="none")
+summary(samples5)
+# Compute DIC - n.iter needs to be the same above and below
+DIC5    <- dic.samples(model5,n.iter=1000,n.thin = 5, progress.bar="none")
+DIC5
+```
+
