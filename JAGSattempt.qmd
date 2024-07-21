@@ -458,3 +458,19 @@ ggplot(samples_beta2, aes(x=Parameter, y=Value)) +
   theme_minimal()
 ```
 
+odds <- exp(.03162)
+odds2 <- exp(.0002308)
+odds3 <- exp(-.00001478)
+
+## Interpretation of Beta 1
+
+For each increase in hectare away from a municipality, the odds of a fire occurring increases by 3.21% with the other variables in the model held constant.
+
+## Interpretation of Beta 2
+
+For each increase in feet the perimeter of the lot, the odds of a fire occurring increases by .0231% with the other variables in the model held constant.
+
+## Interpretation of Beta 3
+
+For each increase in unit of the interaction between hectares away from a municipality and perimeter of the lot, the odds of a fire occurring decreases by .0015%.
+
