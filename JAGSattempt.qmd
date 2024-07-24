@@ -305,6 +305,16 @@ params  <- c("beta0", "beta1","beta2","beta3","beta4")
 samples <- coda.samples(model, 
            variable.names=params, 
            n.iter=1000, progress.bar="none")
+
+# Entering correct coefficient names
+custom_names <- c("Intercept", "NEAR_DIST", "Shape_Leng", "Shape_Area", "Region")
+
+# Rename columns in each chain
+for (chain in 1:length(samples)) {
+  varnames(samples[[chain]]) <- custom_names
+}
+
+# Generate and display the summary
 summary(samples)
 
 # Compute DIC - n.iter needs to be the same above and below
@@ -433,6 +443,15 @@ params2  <- c("beta0", "beta1","beta2","beta3")
 samples2 <- coda.samples(model2, 
            variable.names=params2, 
            n.iter=1000, progress.bar="none")
+# Entering correct coefficient names
+custom_names2 <- c("Intercept", "NEAR_DIST", "Shape_Leng", "Shape_Area")
+
+# Rename columns in each chain
+for (chain in 1:length(samples2)) {
+  varnames(samples2[[chain]]) <- custom_names2
+}
+
+# Generate and display the summary
 summary(samples2)
 # Compute DIC - n.iter needs to be the same above and below
 DIC2    <- dic.samples(model2,n.iter=1000,n.thin = 5, progress.bar="none")
@@ -470,6 +489,15 @@ params3  <- c("beta0", "beta1","beta2","beta3")
 samples3 <- coda.samples(model3, 
            variable.names=params3, 
            n.iter=1000, progress.bar="none")
+# Entering correct coefficient names
+custom_names3 <- c("Intercept", "NEAR_DIST", "Shape_Leng", "Region")
+
+# Rename columns in each chain
+for (chain in 1:length(samples3)) {
+  varnames(samples3[[chain]]) <- custom_names3
+}
+
+# Generate and display the summary
 summary(samples3)
 # Compute DIC - n.iter needs to be the same above and below
 DIC3    <- dic.samples(model3,n.iter=1000,n.thin = 5, progress.bar="none")
@@ -502,6 +530,15 @@ params4  <- c("beta0", "beta1","beta2")
 samples4 <- coda.samples(model4, 
            variable.names=params4, 
            n.iter=1000, progress.bar="none")
+# Entering correct coefficient names
+custom_names4 <- c("Intercept", "NEAR_DIST", "Shape_Leng")
+
+# Rename columns in each chain
+for (chain in 1:length(samples4)) {
+  varnames(samples4[[chain]]) <- custom_names4
+}
+
+# Generate and display the summary
 summary(samples4)
 # Compute DIC - n.iter needs to be the same above and below
 DIC4    <- dic.samples(model4,n.iter=1000,n.thin = 5, progress.bar="none")
@@ -536,6 +573,16 @@ params5  <- c("beta0", "beta1","beta2", "beta3")
 samples5 <- coda.samples(model5, 
            variable.names=params5, 
            n.iter=1000, progress.bar="none")
+
+# Entering correct coefficient names
+custom_names5 <- c("Intercept", "NEAR_DIST", "Shape_Leng", "NEAR_DIST*Shape_Leng")
+
+# Rename columns in each chain
+for (chain in 1:length(samples5)) {
+  varnames(samples5[[chain]]) <- custom_names5
+}
+
+# Generate and display the summary
 summary(samples5)
 # Compute DIC - n.iter needs to be the same above and below
 DIC5    <- dic.samples(model5,n.iter=1000,n.thin = 5, progress.bar="none")
@@ -548,7 +595,7 @@ samples_long <- melt(samples_df)
 names(samples_long) <- c("Parameter", "Value")
 
 # Filter to beta3
-samples_beta3 <- subset(samples_long, Parameter == "beta3")
+samples_beta3 <- subset(samples_long, Parameter == "NEAR_DIST*Shape_Leng")
 
 # Beta3 Plot
 ggplot(samples_beta3, aes(x=Parameter, y=Value)) +
@@ -559,7 +606,7 @@ ggplot(samples_beta3, aes(x=Parameter, y=Value)) +
        y="Value") +
   theme_minimal()
 
-samples_beta1 <- subset(samples_long, Parameter == "beta1")
+samples_beta1 <- subset(samples_long, Parameter == "NEAR_DIST")
 ## Beta1 plot
 ggplot(samples_beta1, aes(x=Parameter, y=Value)) +
   geom_boxplot() +
@@ -569,7 +616,7 @@ ggplot(samples_beta1, aes(x=Parameter, y=Value)) +
        y="Value") +
   theme_minimal()
 
-samples_beta2 <- subset(samples_long, Parameter == "beta2")
+samples_beta2 <- subset(samples_long, Parameter == "Shape_Leng")
 ## Beta2 plot
 ggplot(samples_beta2, aes(x=Parameter, y=Value)) +
   geom_boxplot() +
@@ -580,19 +627,27 @@ ggplot(samples_beta2, aes(x=Parameter, y=Value)) +
   theme_minimal()
 ```
 
-odds <- exp(.03162)
-odds2 <- exp(.0002308)
-odds3 <- exp(-.00001478)
+## Exponentiating the Coefficients to get in Terms of Odds
+
+```{r}
+ND_Odds <- exp(.0674)
+SL_Odds <- exp(.0003248)
+INT_Odds <- exp(-.000007078)
+ND_Odds
+SL_Odds
+INT_Odds
+```
+
 
 ## Interpretation of Beta 1
 
-For each increase in hectare away from a municipality, the odds of a fire occurring increases by 3.21% with the other variables in the model held constant.
+For each increase in hectare away from a municipality, the odds of a fire occurring increases by 6.97% with the other variables in the model held constant.
 
 ## Interpretation of Beta 2
 
-For each increase in feet the perimeter of the lot, the odds of a fire occurring increases by .0231% with the other variables in the model held constant.
+For each increase in feet the perimeter of the lot, the odds of a fire occurring increases by .0325% with the other variables in the model held constant.
 
 ## Interpretation of Beta 3
 
-For each increase in unit of the interaction between hectares away from a municipality and perimeter of the lot, the odds of a fire occurring decreases by .0015%.
+For each increase in unit of the interaction between hectares away from a municipality and perimeter of the lot, the odds of a fire occurring decreases by .0007%.
 
