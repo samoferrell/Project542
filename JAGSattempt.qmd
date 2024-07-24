@@ -14,6 +14,7 @@ library(reshape2)
 library(coda)
 library(MASS)
 library(tidyverse)
+library(stargazer)
 data <- read_csv("actual_data_merge (1).csv")
 
 rowsums <- data |>
@@ -35,7 +36,7 @@ Here we will add a new variable called "fire" into the data set. This variable w
 ```{r}
 bernoulli <- data |>
   mutate(fire = ifelse(total_fires > 0,1,0))
-#View(bernoulli)
+# this data is titled bernoulli due to the addition of the 'bernoulli' variable fire.
 ```
 
 Now we will analyze this data with the "fire" variable added to the data set.
@@ -193,7 +194,9 @@ ggplot(year_summary, aes(x = year, y = mean_area_burned,
                          color = Region, group = Region)) +
   geom_point(size = 3) +
   geom_line() +
-  labs(title = "Average Area Burned per Year, Grouped by Region")
+  labs(title = "Average Area Burned per Year, Grouped by Region",
+              y = "Mean Area Burned",
+       x = "Year")
 ```
 
 ```{r}
@@ -202,7 +205,9 @@ ggplot(month_summary, aes(x = month, y = mean_area_burned,
   geom_point(size = 3) +
   geom_line() +
   facet_grid(year ~ Region) +
-  labs(title = "Average Area Burned per Month, Grouped by Year and Region")
+  labs(title = "Average Area Burned per Month, Grouped by Year and Region",
+       y = "Mean Area Burned",
+       x = "Month")
 ```
 
 ## Boxplots
@@ -212,10 +217,13 @@ pivot_filtered <- pivot |>
   filter(!is.na(area_burned))
 ggplot(pivot_filtered, aes(x = Region, y = area_burned, fill = Region)) +
   geom_boxplot() +
-  facet_wrap(~ year) 
+  facet_wrap(~ year) +
+    labs(title = "Boxplots of Area Burned across Regions and Years",
+       y = "Area Burned")
 ```
+As you can see, due to the outliers present of the major fires it is hard to see the spread of the area burned, so just for visualization purposes, we will remove them to see the spreads across regions.
 
-Outlier removal - source: https://sqlpad.io/tutorial/remove-outliers/
+Outlier removal function - source: https://sqlpad.io/tutorial/remove-outliers/
 
 ```{r}
 removeOutliers <- function(data, column_name) {
@@ -237,12 +245,20 @@ boxplot_no_outliers <- removeOutliers(data = pivot_filtered, column_name = "area
 ```{r}
 ggplot(boxplot_no_outliers, aes(x = Region, y = area_burned, fill = Region)) +
   geom_boxplot() +
-  facet_wrap(~ year) 
+  facet_wrap(~ year) +
+    labs(title = "Boxplots of Area Burned across Regions and Years (outliers removed)",
+       y = "Area Burned",
+       caption = "Outliers Removed for Visualization Purposes")
 ```
 
 ```{r}
 ggplot(boxplot_no_outliers, aes(x = month, y = area_burned, fill = month)) +
-  geom_boxplot()
+  geom_boxplot() +
+  labs(title = "Boxplots of Area Burned across Months (outliers removed)",
+       y = "Area Burned",
+       x = "Month",
+       caption = "Outliers Removed for Visualization Purposes")
+
 ```
 
 ```{r}
