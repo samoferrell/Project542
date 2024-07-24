@@ -130,30 +130,30 @@ pivot <- filtered |>
 # Grouping by region, year, and month and filtering each year
 month_summary_2019 <- pivot |>
   group_by(Region,year,month) |>
-  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE))) |>
+  summarize(mean_area_burned = round(mean(area_burned, na.rm = TRUE), 2)) |>
   filter(year == 2019)
 month_summary_2020 <- pivot |>
   group_by(Region,year,month) |>
-  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE))) |>
+  summarize(mean_area_burned = round(mean(area_burned, na.rm = TRUE), 2)) |>
   filter(year == 2020)
 month_summary_2021 <- pivot |>
   group_by(Region,year,month) |>
-  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE))) |>
+  summarize(mean_area_burned = round(mean(area_burned, na.rm = TRUE), 2)) |>
   filter(year == 2021)
 month_summary_2022 <- pivot |>
   group_by(Region,year,month) |>
-  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE))) |>
+  summarize(mean_area_burned = round(mean(area_burned, na.rm = TRUE), 2)) |>
   filter(year == 2022)
 month_summary_2023 <- pivot |>
   group_by(Region,year,month) |>
-  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE))) |>
+  summarize(mean_area_burned = round(mean(area_burned, na.rm = TRUE), 2)) |>
   filter(year == 2023)
 ```
 
 ```{r}
 year_summary <- pivot |>
     group_by(Region,year) |>
-    summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE)))
+    summarize(mean_area_burned = round((mean(area_burned, na.rm = TRUE)), 2))
 ```
 
 For this table, we will look at the average area burned each year in each region, averaged over all 3 months.
