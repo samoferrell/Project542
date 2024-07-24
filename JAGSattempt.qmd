@@ -30,7 +30,7 @@ data$total_fires <- rowsums$total
 #   pivot_longer(cols = colnames(data[,27:40]), names_to = "YearMonth", values_to = "Occurrence" )
 ```
 
-Adding new variable - takes on 1 if a fire occured, 0 if not:
+Here we will add a new variable called "fire" into the data set. This variable will be a 1 if at least one fire occurred in the area and will be a 0 if no fires occurred.
 
 ```{r}
 bernoulli <- data |>
@@ -38,7 +38,7 @@ bernoulli <- data |>
 #View(bernoulli)
 ```
 
-Trying with bernoulli data:
+Now we will analyze this data with the "fire" variable added to the data set.
 
 # Data Analysis
 
@@ -127,10 +127,27 @@ pivot <- filtered |>
 ```
 
 ```{r}
-month_summary <- pivot |>
+# Grouping by region, year, and month and filtering each year
+month_summary_2019 <- pivot |>
   group_by(Region,year,month) |>
-  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE)))
-
+  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE))) |>
+  filter(year == 2019)
+month_summary_2020 <- pivot |>
+  group_by(Region,year,month) |>
+  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE))) |>
+  filter(year == 2020)
+month_summary_2021 <- pivot |>
+  group_by(Region,year,month) |>
+  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE))) |>
+  filter(year == 2021)
+month_summary_2022 <- pivot |>
+  group_by(Region,year,month) |>
+  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE))) |>
+  filter(year == 2022)
+month_summary_2023 <- pivot |>
+  group_by(Region,year,month) |>
+  summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE))) |>
+  filter(year == 2023)
 ```
 
 ```{r}
@@ -139,9 +156,36 @@ year_summary <- pivot |>
     summarize(mean_area_burned = (mean(area_burned, na.rm = TRUE)))
 ```
 
+For this table, we will look at the average area burned each year in each region, averaged over all 3 months.
+
 ```{r}
-head(year_summary)
-head(month_summary)
+stargazer(year_summary, type = "text", title = "Averaged Area Burned for Each Year Through All Months by Region", digits = 2, summary = FALSE, rownames = FALSE, out = "yearaverages.txt")
+```
+
+Next, we will look at the average area burned by month in 2019.
+
+```{r}
+stargazer(month_summary_2019, type = "text", title = "Averaged Area Burned per Region and Month in 2019", digits = 2, summary = FALSE, rownames = FALSE, out = "2019table.txt")
+```
+
+Here we will look at the average area burned in 2020.
+
+```{r}
+stargazer(month_summary_2020, type = "text", title = "Averaged Area Burned per Region and Month in 2020", digits = 2, summary = FALSE, rownames = FALSE, out = "2020table.txt")
+```
+
+Next, we will look at 2021, 2022, and 2023.
+
+```{r}
+stargazer(month_summary_2021, type = "text", title = "Averaged Area Burned per Region and Month in 2021", digits = 2, summary = FALSE, rownames = FALSE, out = "2021table.txt")
+```
+
+```{r}
+stargazer(month_summary_2022, type = "text", title = "Averaged Area Burned per Region and Month in 2022", digits = 2, summary = FALSE, rownames = FALSE, out = "2022table.txt")
+```
+
+```{r}
+stargazer(month_summary_2023, type = "text", title = "Averaged Area Burned per Region and Month in 2023", digits = 2, summary = FALSE, rownames = FALSE, out = "2023table.txt")
 ```
 
 ```{r}
