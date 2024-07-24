@@ -241,6 +241,62 @@ DIC    <- dic.samples(model,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC
 ```
 
+CV attempt
+```{r}
+model_string <- "model {
+    for (i in 1:length(y)) {
+        y[i] ~ dbern(p[i])
+        logit(p[i]) = beta0 + beta1 * x1[i] + beta2 * x2[i] + beta3 * x3[i] + beta4 * x4[i]
+    }
+    beta0 ~ dnorm(0, 1/(10)^2)
+    beta1 ~ dnorm(0, 1/(10)^2)
+    beta2 ~ dnorm(0, 1/(10)^2)
+    beta3 ~ dnorm(0, 1/(10)^2)
+    beta4 ~ dnorm(0, 1/(10)^2)
+}
+"
+
+# Number of folds for cross-validation
+k <- 5
+n <- nrow(bernoulli)
+fold_size <- floor(n / k)
+
+# Initialize vectors to store results
+predictions <- vector("list", k)
+true_values <- vector("list", k)
+
+# Perform k-fold cross-validation
+# Perform k-fold cross-validation
+for (fold in 1:k) {
+    # ... Same data splitting and model fitting code as before ...
+    
+    # Extract samples for this fold
+    samples_fold <- samples[, , fold]  # Extract samples from all chains for this fold
+    
+    # Extract posterior means or medians (point estimates)
+    beta0_samples <- samples_fold$beta0
+    beta1_samples <- samples_fold$beta1
+    beta2_samples <- samples_fold$beta2
+    beta3_samples <- samples_fold$beta3
+    beta4_samples <- samples_fold$beta4
+    
+    # Calculate predicted probabilities for the test set
+    # Assuming logistic regression equation here
+    logit_p <- beta0_samples + beta1_samples * data_jags_test$x1 +
+               beta2_samples * data_jags_test$x2 +
+               beta3_samples * data_jags_test$x3 +
+               beta4_samples * data_jags_test$x4
+    
+    p <- 1 / (1 + exp(-logit_p))  # Convert logit to probability
+    
+    # Store predictions and true values
+    predictions[[fold]] <- p
+    true_values[[fold]] <- bernoulli$fire[test_indices]
+    
+    # Clean up
+    closeAllConnections()
+}
+```
 
 
 ```{r}
