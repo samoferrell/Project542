@@ -129,6 +129,9 @@ pivot <- filtered |>
 
 ```{r}
 # Grouping by region, year, and month and filtering each year
+month_summary <- pivot |>
+  group_by(Region,year,month) |>
+  summarize(mean_area_burned = round(mean(area_burned, na.rm = TRUE), 2))
 month_summary_2019 <- pivot |>
   group_by(Region,year,month) |>
   summarize(mean_area_burned = round(mean(area_burned, na.rm = TRUE), 2)) |>
@@ -286,7 +289,7 @@ model_string <- textConnection("model{
       logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i] + beta4*x4[i] 
     }
     #Uninformative Priors:
-    beta0 ~ dnorm(0 ,1/(10)^2 )
+    beta0 ~ dnorm(0, 1/(10)^2 )
     beta1 ~ dnorm(0, 1/(10)^2)
     beta2 ~ dnorm(0, 1/(10)^2)
     beta3 ~ dnorm(0, 1/(10)^2)
@@ -322,9 +325,32 @@ DIC    <- dic.samples(model,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC
 ```
 
-<<<<<<< HEAD
-CV attempt
+# CV attempt
 ```{r}
+
+# Assuming bernoulli is your dataframe containing all data
+set.seed(123)  # for reproducibility
+n <- nrow(bernoulli)
+train_indices <- sample(1:n, round(0.8 * n))  # 80% train, 20% test
+test_indices <- setdiff(1:n, train_indices)
+
+# Create training and testing datasets
+train_data <- list(
+  y = bernoulli$fire[train_indices],
+  x1 = bernoulli$NEAR_DIST[train_indices],
+  x2 = bernoulli$Shape_Leng[train_indices],
+  x3 = bernoulli$Shape_Area[train_indices],
+  x4 = bernoulli$Region[train_indices]
+)
+
+test_data <- list(
+  y = bernoulli$fire[test_indices],
+  x1 = bernoulli$NEAR_DIST[test_indices],
+  x2 = bernoulli$Shape_Leng[test_indices],
+  x3 = bernoulli$Shape_Area[test_indices],
+  x4 = bernoulli$Region[test_indices]
+)
+
 model_string <- "model {
     for (i in 1:length(y)) {
         y[i] ~ dbern(p[i])
@@ -338,51 +364,33 @@ model_string <- "model {
 }
 "
 
-# Number of folds for cross-validation
-k <- 5
-n <- nrow(bernoulli)
-fold_size <- floor(n / k)
+model <- jags.model(textConnection(model_string), data = train_data, n.chains = 3, quiet = TRUE)
+update(model, 100)  # burn-in
 
-# Initialize vectors to store results
-predictions <- vector("list", k)
-true_values <- vector("list", k)
+params <- c("beta0", "beta1", "beta2", "beta3", "beta4")
+samples <- coda.samples(model, variable.names = params, n.iter = 1000)
 
-# Perform k-fold cross-validation
-# Perform k-fold cross-validation
-for (fold in 1:k) {
-    # ... Same data splitting and model fitting code as before ...
-    
-    # Extract samples for this fold
-    samples_fold <- samples[, , fold]  # Extract samples from all chains for this fold
-    
-    # Extract posterior means or medians (point estimates)
-    beta0_samples <- samples_fold$beta0
-    beta1_samples <- samples_fold$beta1
-    beta2_samples <- samples_fold$beta2
-    beta3_samples <- samples_fold$beta3
-    beta4_samples <- samples_fold$beta4
-    
-    # Calculate predicted probabilities for the test set
-    # Assuming logistic regression equation here
-    logit_p <- beta0_samples + beta1_samples * data_jags_test$x1 +
-               beta2_samples * data_jags_test$x2 +
-               beta3_samples * data_jags_test$x3 +
-               beta4_samples * data_jags_test$x4
-    
-    p <- 1 / (1 + exp(-logit_p))  # Convert logit to probability
-    
-    # Store predictions and true values
-    predictions[[fold]] <- p
-    true_values[[fold]] <- bernoulli$fire[test_indices]
-    
-    # Clean up
-    closeAllConnections()
-}
+# Extract posterior samples
+posterior_samples <- as.matrix(samples)
+
+# Calculate logit(p) for test set
+logit_p <- posterior_samples[, "beta0"] + 
+           posterior_samples[, "beta1"] * test_data$x1 + 
+           posterior_samples[, "beta2"] * test_data$x2 + 
+           posterior_samples[, "beta3"] * test_data$x3 + 
+           posterior_samples[, "beta4"] * test_data$x4
+
+# Calculate predicted probabilities
+predicted_probabilities <- 1 / (1 + exp(-logit_p))
+
+# Example: Calculate accuracy
+threshold <- 0.5  # Example threshold for binary classification
+predictions <- ifelse(predicted_probabilities > threshold, 1, 0)
+accuracy <- mean(predictions == test_data$y)
+cat("Accuracy:", accuracy, "\n")
 ```
 
 
-=======
->>>>>>> 290f863836f4f1ad24ab364af183b43ddf2bafcf
 ```{r}
 b0 <- c(samples[[1]][,1],samples[[2]][,1])
 b1 <- c(samples[[1]][,2],samples[[2]][,2])
@@ -391,29 +399,6 @@ b3 <- c(samples[[1]][,4],samples[[2]][,4])
 b4 <- c(samples[[1]][,5],samples[[2]][,5])
 ```
 
-## Prediction
-
-```{r}
-# Combine results from 3 different chains into one by stacking matrices that contain simulations.
-mod1_csim = as.mcmc(do.call(rbind, samples))
-
-# Extract posterior mean of coefficients
-pm_coef = colMeans(mod1_csim)
-
-# The matrix multiplication below gives the exponentiation part in equation which will then be used to find estimated probabilities.
-
-predictors <- matrix(c(bernoulli$NEAR_DIST, bernoulli$Shape_Leng, bernoulli$Shape_Area, bernoulli$Region), nrow = 1282, ncol = 4)
-
-pm_Xb = pm_coef["beta0"] + predictors %*% pm_coef[1:4] 
-# Intercept + Design Matrix*Coefficients
-
-# extract probability (basically undo logit link)
-phat = 1.0 / (1.0 + exp(-pm_Xb))  
-# Predicted probabilities that the Outcome = 1 for each observations
-
-plot(phat, jitter(bernoulli$fire))
-(tab0.5 = table(phat > 0.5, bernoulli$fire))
-```
 
 ## Main effects of first three vars
 
@@ -457,6 +442,30 @@ summary(samples2)
 DIC2    <- dic.samples(model2,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC2
 ```
+
+# CV attempt 2
+
+```{r}
+
+# Extract posterior samples
+posterior_samples2 <- as.matrix(samples2)
+
+# Calculate logit(p) for test set
+logit_p2 <- posterior_samples2[, "Intercept"] + 
+           posterior_samples2[, "NEAR_DIST"] * test_data$x1 + 
+           posterior_samples2[, "Shape_Leng"] * test_data$x2 + 
+           posterior_samples2[, "Shape_Area"] * test_data$x3 
+
+# Calculate predicted probabilities
+predicted_probabilities2 <- 1 / (1 + exp(-logit_p2))
+
+# Example: Calculate accuracy
+threshold <- 0.5  # Example threshold for binary classification
+predictions2 <- ifelse(predicted_probabilities2 > threshold, 1, 0)
+accuracy2 <- mean(predictions2 == test_data$y)
+cat("Accuracy:", accuracy2, "\n")
+```
+
 
 That raised DIC slightly....\
 So let's try model with main effects for NEAR_DIST, shape length, and region
@@ -504,6 +513,29 @@ DIC3    <- dic.samples(model3,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC3
 ```
 
+# CV attempt 3
+
+```{r}
+
+# Extract posterior samples
+posterior_samples3 <- as.matrix(samples3)
+
+# Calculate logit(p) for test set
+logit_p3 <- posterior_samples3[, "Intercept"] + 
+           posterior_samples3[, "NEAR_DIST"] * test_data$x1 + 
+           posterior_samples3[, "Shape_Leng"] * test_data$x2 + 
+           posterior_samples3[, "Region"] * test_data$x4 
+
+# Calculate predicted probabilities
+predicted_probabilities3 <- 1 / (1 + exp(-logit_p3))
+
+# Example: Calculate accuracy
+threshold <- 0.5  # Example threshold for binary classification
+predictions3 <- ifelse(predicted_probabilities3 > threshold, 1, 0)
+accuracy3 <- mean(predictions3 == test_data$y)
+cat("Accuracy:", accuracy3, "\n")
+```
+
 ## Main effects of x1 and x2
 
 ```{r}
@@ -543,6 +575,28 @@ summary(samples4)
 # Compute DIC - n.iter needs to be the same above and below
 DIC4    <- dic.samples(model4,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC4
+```
+
+# CV attempt 4
+
+```{r}
+
+# Extract posterior samples
+posterior_samples4 <- as.matrix(samples4)
+
+# Calculate logit(p) for test set
+logit_p4 <- posterior_samples4[, "Intercept"] + 
+           posterior_samples4[, "NEAR_DIST"] * test_data$x1 + 
+           posterior_samples4[, "Shape_Leng"] * test_data$x2
+
+# Calculate predicted probabilities
+predicted_probabilities4 <- 1 / (1 + exp(-logit_p4))
+
+# Example: Calculate accuracy
+threshold <- 0.5  # Example threshold for binary classification
+predictions4 <- ifelse(predicted_probabilities4 > threshold, 1, 0)
+accuracy4 <- mean(predictions4 == test_data$y)
+cat("Accuracy:", accuracy4, "\n")
 ```
 
 ## Adding an Interaction Term into Model
@@ -625,6 +679,29 @@ ggplot(samples_beta2, aes(x=Parameter, y=Value)) +
        x="Perimeter of Lot Slope",
        y="Value") +
   theme_minimal()
+```
+
+# CV attempt 5
+
+```{r}
+
+# Extract posterior samples
+posterior_samples5 <- as.matrix(samples5)
+
+# Calculate logit(p) for test set
+logit_p5 <- posterior_samples5[, "Intercept"] + 
+           posterior_samples5[, "NEAR_DIST"] * test_data$x1 + 
+           posterior_samples5[, "Shape_Leng"] * test_data$x2 + 
+           posterior_samples5[, "NEAR_DIST*Shape_Leng"] * test_data$x1 * test_data$x2 
+
+# Calculate predicted probabilities
+predicted_probabilities5 <- 1 / (1 + exp(-logit_p5))
+
+# Example: Calculate accuracy
+threshold <- 0.5  # Example threshold for binary classification
+predictions5 <- ifelse(predicted_probabilities5 > threshold, 1, 0)
+accuracy5 <- mean(predictions5 == test_data$y)
+cat("Accuracy:", accuracy5, "\n")
 ```
 
 ## Exponentiating the Coefficients to get in Terms of Odds
