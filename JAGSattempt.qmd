@@ -282,113 +282,83 @@ ggplot(boxplot_no_outliers, aes(x = area_burned)) +
 ## Only main effect for all terms
 
 ```{r}
+set.seed(0820)
+fold <- rep(1:5,2)
+fold <- sample(fold)
+fold
 
-model_string <- textConnection("model{
-    for (i in 1:length(y)) {
-      y[i] ~ dbern(p[i])
-      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i] + beta4*x4[i] 
-    }
-    #Uninformative Priors:
-    beta0 ~ dnorm(0, 1/(10)^2 )
-    beta1 ~ dnorm(0, 1/(10)^2)
-    beta2 ~ dnorm(0, 1/(10)^2)
-    beta3 ~ dnorm(0, 1/(10)^2)
-    beta4 ~ dnorm(0, 1/(10)^2)
+expit <- function(x){1/(1+exp(-x))}
+Y_mean1   <- matrix(NA,10,2)
+Y_median1 <- matrix(NA,10,2)
+Y_low1    <- matrix(NA,10,2)
+Y_high1   <- matrix(NA,10,2)
 
-}")
+y=bernoulli$fire
+x1 = bernoulli$NEAR_DIST
+x2 = bernoulli$Shape_Leng
+x3 = bernoulli$Shape_Area
+x4 = bernoulli$Region
 
-# Dr. Reich does not standardize the data, but other resource does
+for(f in 1:5){
+
+    data_jags <- list(y=y[fold!=f], x1 = x1[fold!=f], x2 = x2[fold!=f], x3 = x3[fold!=f], x4 = x4[fold!=f])
+    params  <- c("beta0", "beta1","beta2","beta3","beta4")
+   
+   # Select training data with fold not equal to f
+
+    model_string <- textConnection("model{
+      for (i in 1:length(y)) {
+        y[i] ~ dbern(p[i])
+        logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i] + beta4*x4[i] 
+      }
+      #Uninformative Priors:
+      beta0 ~ dnorm(0, 1/(10)^2 )
+      beta1 ~ dnorm(0, 1/(10)^2)
+      beta2 ~ dnorm(0, 1/(10)^2)
+      beta3 ~ dnorm(0, 1/(10)^2)
+      beta4 ~ dnorm(0, 1/(10)^2)
+    }")
 
 
-data_jags = list(y=bernoulli$fire, x1 = bernoulli$NEAR_DIST, x2 = bernoulli$Shape_Leng, x3 = bernoulli$Shape_Area, x4 = bernoulli$Region)
+    model1 <- jags.model(model_string,data = data_jags, n.chains=3,quiet=TRUE)
+    update(model1, 100, progress.bar="none")
+    coda_samples <- coda.samples(model1, 
+                            variable.names=params, 
+                            n.iter=1000, progress.bar="none")
+    samples <- coda_samples[[1]]
 
-model <- jags.model(model_string,data = data_jags, n.chains=3,quiet=TRUE)
-update(model, 100, progress.bar="none")
-params  <- c("beta0", "beta1","beta2","beta3","beta4")
-samples <- coda.samples(model, 
-           variable.names=params, 
-           n.iter=1000, progress.bar="none")
+   # Make predictions
+   for(i in 1:10){if(fold[i]==f){
+      Y_mod1 <- rbernoulli(nrow(samples),expit(samples[,1] + samples[,2]*x1[i] + samples[,3]*x2[i] + samples[,4]*x3[i] + samples[,5]*x4[i]))
+      
+      Y_mean1   <- mean(Y_mod1)
+      Y_median1 <- median(Y_mod1)
+      Y_low1    <- quantile(Y_mod1,0.025)
+      Y_high1   <- quantile(Y_mod1,0.975)
+
+      ppd1 <- table(Y_mod1-0.1)
+   }} 
+ }
+MSE1   <- mean((Y_mean1-y)^2)
+MAD1   <- mean(abs(Y_mean1-y))
+
 
 # Entering correct coefficient names
 custom_names <- c("Intercept", "NEAR_DIST", "Shape_Leng", "Shape_Area", "Region")
 
 # Rename columns in each chain
-for (chain in 1:length(samples)) {
-  varnames(samples[[chain]]) <- custom_names
+for (chain in 1:length(coda_samples)) {
+  varnames(coda_samples[[chain]]) <- custom_names
 }
 
 # Generate and display the summary
-summary(samples)
+summary(coda_samples)
 
 # Compute DIC - n.iter needs to be the same above and below
-DIC    <- dic.samples(model,n.iter=1000,n.thin = 5, progress.bar="none")
-DIC
+DIC1    <- dic.samples(model,n.iter=1000,n.thin = 5, progress.bar="none")
+DIC1
 ```
 
-# CV attempt
-```{r}
-
-# Assuming bernoulli is your dataframe containing all data
-set.seed(123)  # for reproducibility
-n <- nrow(bernoulli)
-train_indices <- sample(1:n, round(0.8 * n))  # 80% train, 20% test
-test_indices <- setdiff(1:n, train_indices)
-
-# Create training and testing datasets
-train_data <- list(
-  y = bernoulli$fire[train_indices],
-  x1 = bernoulli$NEAR_DIST[train_indices],
-  x2 = bernoulli$Shape_Leng[train_indices],
-  x3 = bernoulli$Shape_Area[train_indices],
-  x4 = bernoulli$Region[train_indices]
-)
-
-test_data <- list(
-  y = bernoulli$fire[test_indices],
-  x1 = bernoulli$NEAR_DIST[test_indices],
-  x2 = bernoulli$Shape_Leng[test_indices],
-  x3 = bernoulli$Shape_Area[test_indices],
-  x4 = bernoulli$Region[test_indices]
-)
-
-model_string <- "model {
-    for (i in 1:length(y)) {
-        y[i] ~ dbern(p[i])
-        logit(p[i]) = beta0 + beta1 * x1[i] + beta2 * x2[i] + beta3 * x3[i] + beta4 * x4[i]
-    }
-    beta0 ~ dnorm(0, 1/(10)^2)
-    beta1 ~ dnorm(0, 1/(10)^2)
-    beta2 ~ dnorm(0, 1/(10)^2)
-    beta3 ~ dnorm(0, 1/(10)^2)
-    beta4 ~ dnorm(0, 1/(10)^2)
-}
-"
-
-model <- jags.model(textConnection(model_string), data = train_data, n.chains = 3, quiet = TRUE)
-update(model, 100)  # burn-in
-
-params <- c("beta0", "beta1", "beta2", "beta3", "beta4")
-samples <- coda.samples(model, variable.names = params, n.iter = 1000)
-
-# Extract posterior samples
-posterior_samples <- as.matrix(samples)
-
-# Calculate logit(p) for test set
-logit_p <- posterior_samples[, "beta0"] + 
-           posterior_samples[, "beta1"] * test_data$x1 + 
-           posterior_samples[, "beta2"] * test_data$x2 + 
-           posterior_samples[, "beta3"] * test_data$x3 + 
-           posterior_samples[, "beta4"] * test_data$x4
-
-# Calculate predicted probabilities
-predicted_probabilities <- 1 / (1 + exp(-logit_p))
-
-# Example: Calculate accuracy
-threshold <- 0.5  # Example threshold for binary classification
-predictions <- ifelse(predicted_probabilities > threshold, 1, 0)
-accuracy <- mean(predictions == test_data$y)
-cat("Accuracy:", accuracy, "\n")
-```
 
 
 ```{r}
@@ -403,68 +373,71 @@ b4 <- c(samples[[1]][,5],samples[[2]][,5])
 ## Main effects of first three vars
 
 ```{r}
+Y_mean2   <- matrix(NA,10,2)
+Y_median2 <- matrix(NA,10,2)
+Y_low2    <- matrix(NA,10,2)
+Y_high2   <- matrix(NA,10,2)
 
-model_string2 <- textConnection("model{
-    for (i in 1:length(y)) {
-      y[i] ~ dbern(p[i])
-      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i]
-    }
-    #Uninformative Priors:
-    beta0 ~ dnorm(0 ,1/(10)^2 )
-    beta1 ~ dnorm(0, 1/(10)^2)
-    beta2 ~ dnorm(0, 1/(10)^2)
-    beta3 ~ dnorm(0, 1/(10)^2)
+for(f in 1:5){
 
-}")
+    data_jags2 <- list(y=y[fold!=f], x1 = x1[fold!=f], x2 = x2[fold!=f], x3 = x3[fold!=f])
+    params2  <- c("beta0", "beta1","beta2","beta3")
+   
+   # Select training data with fold not equal to f
 
-# Dr. Reich does not standardize the data, but other resource does
+    model_string2 <- textConnection("model{
+      for (i in 1:length(y)) {
+        y[i] ~ dbern(p[i])
+        logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i] 
+      }
+      beta0 ~ dnorm(0 ,1/(10)^2 )
+      beta1 ~ dnorm(0, 1/(10)^2)
+      beta2 ~ dnorm(0, 1/(10)^2)
+      beta3 ~ dnorm(0, 1/(10)^2)
+    }")
 
 
-data_jags2 = list(y=bernoulli$fire, x1 = bernoulli$NEAR_DIST, x2 = bernoulli$Shape_Leng, x3 = bernoulli$Shape_Area)
+    model2 <- jags.model(model_string2,data = data_jags2, n.chains=3,quiet=TRUE)
+    update(model2, 100, progress.bar="none")
+    coda_samples2 <- coda.samples(model2, 
+                            variable.names=params2, 
+                            n.iter=1000, progress.bar="none")
+    samples2 <- coda_samples2[[1]]
 
-model2 <- jags.model(model_string2,data = data_jags2, n.chains=3,quiet=TRUE)
-update(model2, 100, progress.bar="none")
-params2  <- c("beta0", "beta1","beta2","beta3")
-samples2 <- coda.samples(model2, 
-           variable.names=params2, 
-           n.iter=1000, progress.bar="none")
+
+   # Make predictions
+   for(i in 1:10){if(fold[i]==f){
+      Y_mod2 <- rbernoulli(nrow(samples2),expit(samples2[,1] + samples2[,2]*x1[i] + samples2[,3]*x2[i] + samples2[,4]*x3[i]))
+      
+      Y_mean2   <- mean(Y_mod2)
+      Y_median2 <- median(Y_mod2)
+      Y_low2    <- quantile(Y_mod2,0.025)
+      Y_high2   <- quantile(Y_mod2,0.975)
+
+      ppd2 <- table(Y_mod2-0.1)
+   }} 
+ }
+MSE2   <- mean((Y_mean2-y)^2)
+MAD2   <- mean(abs(Y_mean2-y))
+
+
 # Entering correct coefficient names
 custom_names2 <- c("Intercept", "NEAR_DIST", "Shape_Leng", "Shape_Area")
 
 # Rename columns in each chain
-for (chain in 1:length(samples2)) {
-  varnames(samples2[[chain]]) <- custom_names2
+for (chain in 1:length(coda_samples2)) {
+  varnames(coda_samples2[[chain]]) <- custom_names2
 }
 
 # Generate and display the summary
-summary(samples2)
+summary(coda_samples2)
+
 # Compute DIC - n.iter needs to be the same above and below
 DIC2    <- dic.samples(model2,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC2
 ```
 
-# CV attempt 2
 
-```{r}
-
-# Extract posterior samples
-posterior_samples2 <- as.matrix(samples2)
-
-# Calculate logit(p) for test set
-logit_p2 <- posterior_samples2[, "Intercept"] + 
-           posterior_samples2[, "NEAR_DIST"] * test_data$x1 + 
-           posterior_samples2[, "Shape_Leng"] * test_data$x2 + 
-           posterior_samples2[, "Shape_Area"] * test_data$x3 
-
-# Calculate predicted probabilities
-predicted_probabilities2 <- 1 / (1 + exp(-logit_p2))
-
-# Example: Calculate accuracy
-threshold <- 0.5  # Example threshold for binary classification
-predictions2 <- ifelse(predicted_probabilities2 > threshold, 1, 0)
-accuracy2 <- mean(predictions2 == test_data$y)
-cat("Accuracy:", accuracy2, "\n")
-```
 
 
 That raised DIC slightly....\
@@ -474,175 +447,197 @@ So let's try model with main effects for NEAR_DIST, shape length, and region
 
 ```{r}
 
-model_string3 <- textConnection("model{
-    for (i in 1:length(y)) {
-      y[i] ~ dbern(p[i])
-      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x4[i]
-    }
-    #Uninformative Priors:
-    beta0 ~ dnorm(0 ,1/(10)^2 )
-    beta1 ~ dnorm(0, 1/(10)^2)
-    beta2 ~ dnorm(0, 1/(10)^2)
-    beta3 ~ dnorm(0, 1/(10)^2)
+Y_mean3   <- matrix(NA,10,2)
+Y_median3 <- matrix(NA,10,2)
+Y_low3    <- matrix(NA,10,2)
+Y_high3   <- matrix(NA,10,2)
 
-}")
+for(f in 1:5){
 
-# Dr. Reich does not standardize the data, but other resource does
+    data_jags3 <- list(y=y[fold!=f], x1 = x1[fold!=f], x2 = x2[fold!=f], x4 = x4[fold!=f])
+    params3 <- c("beta0", "beta1","beta2","beta3")
+   
+   # Select training data with fold not equal to f
+
+    model_string3 <- textConnection("model{
+      for (i in 1:length(y)) {
+        y[i] ~ dbern(p[i])
+        logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x4[i] 
+      }
+      beta0 ~ dnorm(0 ,1/(10)^2 )
+      beta1 ~ dnorm(0, 1/(10)^2)
+      beta2 ~ dnorm(0, 1/(10)^2)
+      beta3 ~ dnorm(0, 1/(10)^2)
+    }")
 
 
-data_jags3 = list(y=bernoulli$fire, x1 = bernoulli$NEAR_DIST, x2 = bernoulli$Shape_Leng, x4 = bernoulli$Region)
+    model3 <- jags.model(model_string3,data = data_jags3, n.chains=3,quiet=TRUE)
+    update(model3, 100, progress.bar="none")
+    coda_samples3 <- coda.samples(model3, 
+                            variable.names=params3, 
+                            n.iter=1000, progress.bar="none")
+    samples3 <- coda_samples3[[1]]
 
-model3 <- jags.model(model_string3,data = data_jags3, n.chains=3,quiet=TRUE)
-update(model3, 100, progress.bar="none")
-params3  <- c("beta0", "beta1","beta2","beta3")
-samples3 <- coda.samples(model3, 
-           variable.names=params3, 
-           n.iter=1000, progress.bar="none")
+
+   # Make predictions
+   for(i in 1:10){if(fold[i]==f){
+      Y_mod3 <- rbernoulli(nrow(samples3),expit(samples3[,1] + samples3[,2]*x1[i] + samples3[,3]*x2[i] + samples3[,4]*x4[i]))
+      
+      Y_mean3   <- mean(Y_mod3)
+      Y_median3 <- median(Y_mod3)
+      Y_low3    <- quantile(Y_mod3,0.025)
+      Y_high3   <- quantile(Y_mod3,0.975)
+
+      ppd3 <- table(Y_mod3-0.1)
+   }} 
+ }
+MSE3   <- mean((Y_mean3-y)^2)
+MAD3   <- mean(abs(Y_mean3-y))
+
 # Entering correct coefficient names
 custom_names3 <- c("Intercept", "NEAR_DIST", "Shape_Leng", "Region")
 
 # Rename columns in each chain
-for (chain in 1:length(samples3)) {
-  varnames(samples3[[chain]]) <- custom_names3
+for (chain in 1:length(coda_samples3)) {
+  varnames(coda_samples3[[chain]]) <- custom_names3
 }
 
 # Generate and display the summary
-summary(samples3)
+summary(coda_samples3)
 # Compute DIC - n.iter needs to be the same above and below
 DIC3    <- dic.samples(model3,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC3
 ```
 
-# CV attempt 3
-
-```{r}
-
-# Extract posterior samples
-posterior_samples3 <- as.matrix(samples3)
-
-# Calculate logit(p) for test set
-logit_p3 <- posterior_samples3[, "Intercept"] + 
-           posterior_samples3[, "NEAR_DIST"] * test_data$x1 + 
-           posterior_samples3[, "Shape_Leng"] * test_data$x2 + 
-           posterior_samples3[, "Region"] * test_data$x4 
-
-# Calculate predicted probabilities
-predicted_probabilities3 <- 1 / (1 + exp(-logit_p3))
-
-# Example: Calculate accuracy
-threshold <- 0.5  # Example threshold for binary classification
-predictions3 <- ifelse(predicted_probabilities3 > threshold, 1, 0)
-accuracy3 <- mean(predictions3 == test_data$y)
-cat("Accuracy:", accuracy3, "\n")
-```
 
 ## Main effects of x1 and x2
 
 ```{r}
-set.seed(50)
-model_string4 <- textConnection("model{
-    for (i in 1:length(y)) {
-      y[i] ~ dbern(p[i])
-      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i]
-    }
-    #Uninformative Priors:
-    beta0 ~ dnorm(0 ,1/(10)^2)
-    beta1 ~ dnorm(0, 1/(10)^2)
-    beta2 ~ dnorm(0, 1/(10)^2)
-}")
+Y_mean4   <- matrix(NA,10,2)
+Y_median4 <- matrix(NA,10,2)
+Y_low4    <- matrix(NA,10,2)
+Y_high4   <- matrix(NA,10,2)
 
-# Dr. Reich does not standardize the data, but other resource does
+for(f in 1:5){
+
+    data_jags4 <- list(y=y[fold!=f], x1 = x1[fold!=f], x2 = x2[fold!=f])
+    params4 <- c("beta0", "beta1","beta2")
+   
+   # Select training data with fold not equal to f
+
+    model_string4 <- textConnection("model{
+      for (i in 1:length(y)) {
+        y[i] ~ dbern(p[i])
+        logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] 
+      }
+      beta0 ~ dnorm(0 ,1/(10)^2 )
+      beta1 ~ dnorm(0, 1/(10)^2)
+      beta2 ~ dnorm(0, 1/(10)^2)
+    }")
 
 
-data_jags4 = list(y=bernoulli$fire, x1 = bernoulli$NEAR_DIST, x2 = bernoulli$Shape_Leng)
+    model4 <- jags.model(model_string4,data = data_jags4, n.chains=3,quiet=TRUE)
+    update(model4, 100, progress.bar="none")
+    coda_samples4 <- coda.samples(model4, 
+                            variable.names=params4, 
+                            n.iter=1000, progress.bar="none")
+    samples4 <- coda_samples4[[1]]
 
-model4 <- jags.model(model_string4,data = data_jags4, n.chains=3,quiet=TRUE)
-update(model4, 100, progress.bar="none")
-params4  <- c("beta0", "beta1","beta2")
-samples4 <- coda.samples(model4, 
-           variable.names=params4, 
-           n.iter=1000, progress.bar="none")
+
+   # Make predictions
+   for(i in 1:10){if(fold[i]==f){
+      Y_mod4 <- rbernoulli(nrow(samples4),expit(samples4[,1] + samples4[,2]*x1[i] + samples4[,3]*x2[i]))
+      Y_mean4   <- mean(Y_mod4)
+      Y_median4 <- median(Y_mod4)
+      Y_low4    <- quantile(Y_mod4,0.025)
+      Y_high4   <- quantile(Y_mod4,0.975)
+
+      ppd4 <- table(Y_mod4-0.1)
+   }} 
+ }
+MSE4   <- mean((Y_mean4-y)^2)
+MAD4   <- mean(abs(Y_mean4-y))
 # Entering correct coefficient names
 custom_names4 <- c("Intercept", "NEAR_DIST", "Shape_Leng")
 
 # Rename columns in each chain
-for (chain in 1:length(samples4)) {
-  varnames(samples4[[chain]]) <- custom_names4
+for (chain in 1:length(coda_samples4)) {
+  varnames(coda_samples4[[chain]]) <- custom_names4
 }
 
 # Generate and display the summary
-summary(samples4)
+summary(coda_samples4)
 # Compute DIC - n.iter needs to be the same above and below
 DIC4    <- dic.samples(model4,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC4
 ```
 
-# CV attempt 4
-
-```{r}
-
-# Extract posterior samples
-posterior_samples4 <- as.matrix(samples4)
-
-# Calculate logit(p) for test set
-logit_p4 <- posterior_samples4[, "Intercept"] + 
-           posterior_samples4[, "NEAR_DIST"] * test_data$x1 + 
-           posterior_samples4[, "Shape_Leng"] * test_data$x2
-
-# Calculate predicted probabilities
-predicted_probabilities4 <- 1 / (1 + exp(-logit_p4))
-
-# Example: Calculate accuracy
-threshold <- 0.5  # Example threshold for binary classification
-predictions4 <- ifelse(predicted_probabilities4 > threshold, 1, 0)
-accuracy4 <- mean(predictions4 == test_data$y)
-cat("Accuracy:", accuracy4, "\n")
-```
 
 ## Adding an Interaction Term into Model
 
 ```{r}
-set.seed(50)
-model_string5 <- textConnection("model{
-    for (i in 1:length(y)) {
-      y[i] ~ dbern(p[i])
-      logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x3[i]
-    }
-    #Uninformative Priors:
-    beta0 ~ dnorm(0 ,1/(10)^2)
-    beta1 ~ dnorm(0, 1/(10)^2)
-    beta2 ~ dnorm(0, 1/(10)^2)
-    beta3 ~ dnorm(0, 1/(10)^2)
+Y_mean5   <- matrix(NA,10,2)
+Y_median5 <- matrix(NA,10,2)
+Y_low5    <- matrix(NA,10,2)
+Y_high5   <- matrix(NA,10,2)
 
-}")
+for(f in 1:5){
 
-# Dr. Reich does not standardize the data, but other resource does
+    data_jags5 <- list(y=y[fold!=f], x1 = x1[fold!=f], x2 = x2[fold!=f])
+    params5 <- c("beta0", "beta1","beta2","beta3")
+   
+   # Select training data with fold not equal to f
+
+    model_string5 <- textConnection("model{
+      for (i in 1:length(y)) {
+        y[i] ~ dbern(p[i])
+        logit(p[i]) = beta0 + beta1*x1[i] + beta2*x2[i] + beta3*x1[i]*x2[i] 
+      }
+      beta0 ~ dnorm(0 ,1/(10)^2 )
+      beta1 ~ dnorm(0, 1/(10)^2)
+      beta2 ~ dnorm(0, 1/(10)^2)
+      beta3 ~ dnorm(0, 1/(10)^2)
+    }")
 
 
-data_jags5 = list(y=bernoulli$fire, x1 = bernoulli$NEAR_DIST, x2 = bernoulli$Shape_Leng, x3 = bernoulli$Shape_Leng*bernoulli$NEAR_DIST)
+    model5 <- jags.model(model_string5,data = data_jags5, n.chains=3,quiet=TRUE)
+    update(model5, 100, progress.bar="none")
+    coda_samples5 <- coda.samples(model5, 
+                            variable.names=params5, 
+                            n.iter=1000, progress.bar="none")
+    samples5 <- coda_samples5[[1]]
 
-model5 <- jags.model(model_string5,data = data_jags5, n.chains=3,quiet=TRUE)
-update(model5, 100, progress.bar="none")
-params5  <- c("beta0", "beta1","beta2", "beta3")
-samples5 <- coda.samples(model5, 
-           variable.names=params5, 
-           n.iter=1000, progress.bar="none")
+
+   # Make predictions
+   for(i in 1:10){if(fold[i]==f){
+      Y_mod5 <- rbernoulli(nrow(samples5),expit(samples5[,1] + samples5[,2]*x1[i] + samples5[,3]*x2[i] + samples5[,4]*x1[i]*x2[i]))
+      
+      Y_mean5   <- mean(Y_mod5)
+      Y_median5 <- median(Y_mod5)
+      Y_low5    <- quantile(Y_mod5,0.025)
+      Y_high5   <- quantile(Y_mod5,0.975)
+
+      ppd5 <- table(Y_mod5-0.1)
+   }} 
+ }
+MSE5   <- mean((Y_mean5-y)^2)
+MAD5   <- mean(abs(Y_mean5-y))
 
 # Entering correct coefficient names
 custom_names5 <- c("Intercept", "NEAR_DIST", "Shape_Leng", "NEAR_DIST*Shape_Leng")
 
 # Rename columns in each chain
-for (chain in 1:length(samples5)) {
-  varnames(samples5[[chain]]) <- custom_names5
+for (chain in 1:length(coda_samples5)) {
+  varnames(coda_samples5[[chain]]) <- custom_names5
 }
 
 # Generate and display the summary
-summary(samples5)
+summary(coda_samples5)
 # Compute DIC - n.iter needs to be the same above and below
 DIC5    <- dic.samples(model5,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC5
 
-samples_df <- as.data.frame(do.call(rbind, lapply(samples5, as.matrix)))
+samples_df <- as.data.frame(do.call(rbind, lapply(coda_samples5, as.matrix)))
 
 # Melt the data frame to long format for ggplot2
 samples_long <- melt(samples_df)
@@ -681,35 +676,13 @@ ggplot(samples_beta2, aes(x=Parameter, y=Value)) +
   theme_minimal()
 ```
 
-# CV attempt 5
-
-```{r}
-
-# Extract posterior samples
-posterior_samples5 <- as.matrix(samples5)
-
-# Calculate logit(p) for test set
-logit_p5 <- posterior_samples5[, "Intercept"] + 
-           posterior_samples5[, "NEAR_DIST"] * test_data$x1 + 
-           posterior_samples5[, "Shape_Leng"] * test_data$x2 + 
-           posterior_samples5[, "NEAR_DIST*Shape_Leng"] * test_data$x1 * test_data$x2 
-
-# Calculate predicted probabilities
-predicted_probabilities5 <- 1 / (1 + exp(-logit_p5))
-
-# Example: Calculate accuracy
-threshold <- 0.5  # Example threshold for binary classification
-predictions5 <- ifelse(predicted_probabilities5 > threshold, 1, 0)
-accuracy5 <- mean(predictions5 == test_data$y)
-cat("Accuracy:", accuracy5, "\n")
-```
 
 ## Exponentiating the Coefficients to get in Terms of Odds
 
 ```{r}
-ND_Odds <- exp(.0674)
-SL_Odds <- exp(.0003248)
-INT_Odds <- exp(-.000007078)
+ND_Odds <- exp(.0772)
+SL_Odds <- exp(.0003547)
+INT_Odds <- exp(-.000007318)
 ND_Odds
 SL_Odds
 INT_Odds
@@ -718,11 +691,11 @@ INT_Odds
 
 ## Interpretation of Beta 1
 
-For each increase in hectare away from a municipality, the odds of a fire occurring increases by 6.97% with the other variables in the model held constant.
+For each increase in hectare away from a municipality, the odds of a fire occurring increases by 8.03% with the other variables in the model held constant.
 
 ## Interpretation of Beta 2
 
-For each increase in feet the perimeter of the lot, the odds of a fire occurring increases by .0325% with the other variables in the model held constant.
+For each increase in feet the perimeter of the lot, the odds of a fire occurring increases by .0355% with the other variables in the model held constant.
 
 ## Interpretation of Beta 3
 
