@@ -270,7 +270,7 @@ ggplot(boxplot_no_outliers, aes(x = area_burned)) +
 
 # Models
 
-## Only main effect for all terms
+## Model with all 4 Variables Included (NEAR_DIST, Shape_Leng, Shape_Area, and Region)
 
 ```{r}
 set.seed(0820)
@@ -350,9 +350,9 @@ DIC1    <- dic.samples(model1,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC1
 ```
 
+Next, we will take out the region variable because it was the least significant variable in our model.
 
-
-## Main effects of first three vars
+## Main effects of NEAR_DIST, Shape_Leng, and Shape_Area
 
 ```{r}
 Y_mean2   <- matrix(NA,10,2)
@@ -423,9 +423,9 @@ DIC2
 
 
 That raised DIC slightly....\
-So let's try model with main effects for NEAR_DIST, shape length, and region
+So let's try model with main effects for NEAR_DIST, shape length, and region.
 
-## Main effects of x1, x2, and x4
+## Main effects of NEAR_DIST, Shape_Leng, and Region
 
 ```{r}
 
@@ -491,8 +491,9 @@ DIC3    <- dic.samples(model3,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC3
 ```
 
+Region and Shape_Area seem like insignificant predictors, so we will remove both from the model. Next, we will look at the main effects of distance nearest to a municipality and length of the lot in hectares.
 
-## Main effects of x1 and x2
+## Main effects of NEAR_DIST and Shape_Leng
 
 ```{r}
 Y_mean4   <- matrix(NA,10,2)
@@ -554,8 +555,10 @@ DIC4    <- dic.samples(model4,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC4
 ```
 
+This model was slightly better in DIC with the 2 variables removed. Lastly, we will see if adding an interaction term between these 2 variables in our model would help the model.
 
-## Adding an Interaction Term into Model
+
+## Adding an Interaction Term Between NEAR_DIST and Shape_Leng into Model
 
 ```{r}
 Y_mean5   <- matrix(NA,10,2)
@@ -657,6 +660,8 @@ ggplot(samples_beta2, aes(x=Parameter, y=Value)) +
        y="Value") +
   theme_minimal()
 ```
+
+This model does better than the others in terms of DIC, MSE and MAD, so it is the model we would use for predicting fires most effectively.
 
 
 ## Exponentiating the Coefficients to get in Terms of Odds
