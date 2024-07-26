@@ -346,19 +346,10 @@ for (chain in 1:length(coda_samples)) {
 summary(coda_samples)
 
 # Compute DIC - n.iter needs to be the same above and below
-DIC1    <- dic.samples(model,n.iter=1000,n.thin = 5, progress.bar="none")
+DIC1    <- dic.samples(model1,n.iter=1000,n.thin = 5, progress.bar="none")
 DIC1
 ```
 
-
-
-```{r}
-b0 <- c(samples[[1]][,1],samples[[2]][,1])
-b1 <- c(samples[[1]][,2],samples[[2]][,2])
-b2 <- c(samples[[1]][,3],samples[[2]][,3])
-b3 <- c(samples[[1]][,4],samples[[2]][,4])
-b4 <- c(samples[[1]][,5],samples[[2]][,5])
-```
 
 
 ## Main effects of first three vars

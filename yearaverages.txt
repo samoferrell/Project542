@@ -1,5 +1,5 @@
 
-Averaged Area Burned for Each Year Through All Months by Region
+Averaged Area Burned in Hectares for Each Year Through All Months by Region
 ============================
 Region year mean_area_burned
 ----------------------------

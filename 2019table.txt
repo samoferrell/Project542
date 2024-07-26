@@ -1,5 +1,5 @@
 
-Averaged Area Burned per Region and Month in 2019
+Averaged Area Burned in Hectares per Region and Month in 2019
 ==================================
 Region year month mean_area_burned
 ----------------------------------
