@@ -6,60 +6,53 @@ editor: visual
 
 ```{r}
 knitr::opts_chunk$set(echo = TRUE)
-
 Sys.setenv(JAGS_HOME="C:/Program Files/JAGS/JAGS-4.3.1")
 
+# Loading necessary libraries
 library(rjags)
 library(reshape2)
 library(coda)
 library(MASS)
 library(tidyverse)
 library(stargazer)
+library(ggplot2)
+
+# Reading in the data
 data <- read_csv("actual_data_merge (1).csv")
 
+# Now we will calculate the total fires across the dummy rows
 rowsums <- data |>
   select(27:40) |>
   mutate(total = rowSums(across(everything()), na.rm = TRUE))
-
 data$total_fires <- rowsums$total
-# 
-# 
-# 
-# 
-# data2 <-  data |>
-#   select(-1) |>
-#   pivot_longer(cols = colnames(data[,27:40]), names_to = "YearMonth", values_to = "Occurrence" )
 ```
 
-Here we will add a new variable called "fire" into the data set. This variable will be a 1 if at least one fire occurred in the area and will be a 0 if no fires occurred. Due to this variable following 
+Here we will add a new variable called "fire" into the data set. This variable will be a 1 if at least one fire occurred in the area and will be a 0 if no fires occurred. Due to this variable following a bernoulli distribution we will name our data bernoulli. 
 
 ```{r}
+# adding the fire variable which takes the value 1 if at least 1 fire occured in the observation.
 bernoulli <- data |>
   mutate(fire = ifelse(total_fires > 0,1,0))
+
 # this data is titled bernoulli due to the addition of the 'bernoulli' variable fire.
 ```
 
 Now we will analyze this data with the "fire" variable added to the data set.
 
 # Data Analysis
-
-```{r}
-library(ggplot2)
-```
-
 ## Tables
 
 Count of fire occurrence by region
 
 ```{r}
-region_fire <- table(bernoulli$Region, bernoulli$fire)
+region_fire <- table(bernoulli$Region, bernoulli$total_fires)
 dimnames(region_fire) <- list(
   "Region" = c("1", "2", "3"),
-  "Occurence of at least one fire" = c("No", "Yes"))
+  "Number of fires across the years per plot" = c("0","1", "2","3","4","5","6","7","8","9","10"))
 region_fire
 ```
 
-Region and Category counts
+Counts of Region and Category
 
 ```{r}
 data3 <- bernoulli
@@ -67,42 +60,38 @@ table(data3$Region, data3$Category, dnn=c("Region","Name of Category"))
 ```
 
 ## Bar Graphs
-
 ```{r}
 df <- as.data.frame(region_fire)
-ggplot(df, aes(x = Region, y = Freq, fill = Occurence.of.at.least.one.fire)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Occurrence of Fire by Region",
-       x = "Region",
-       y = "Count",
-       fill = "Occurrence of Fire") +
-    scale_fill_manual(values = c("No" = "skyblue", "Yes" = "maroon")) 
-
-```
-
-Region 1 appears to have the most fires. We should note that this graph looks skewed because
-
-Percentage of yes with respect to each region:
-
-```{r}
-library(tidyverse)
-percent <- bernoulli |>
-  group_by(Region) |>
-  mutate (Region = as.factor(Region)) |>
-  summarize(percent = sum(fire)/ n() * 100)
 ```
 
 ```{r}
-ggplot(percent, aes(x = Region, y = percent, fill = Region)) +
+ggplot(df, aes(x = Number.of.fires.across.the.years.per.plot, y = Freq, fill = Region)) +
   geom_bar(stat = "identity") +
-  labs(title = "Percentage of Relative Fire Occurences by Region",
-       x = "Region",
-       y = "Percentage") 
+  labs(title = "Number of fires per plot, separated by region",
+       x = "Number of fires per plot",
+       y = "Frequency") +
+  facet_wrap(~ Region)
 ```
 
-## Plots
+As we can see, this data has a lot of observations with 0 fires, we will remove these to better see the distribution of counts of fires per plot by region.
 
-Average hectacre of burned area, grouped by region, over time.
+```{r}
+# Filtering to remove the count of 0 fires per region
+df_no_0_fires <- df[-(1:3),]
+```
+
+```{r}
+ggplot(df_no_0_fires, aes(x = Number.of.fires.across.the.years.per.plot, y = Freq, fill = Region)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Number of fires per plot, separated by region (removing counts for 0 fires)",
+       x = "Number of fires per plot",
+       y = "Frequency") +
+  facet_wrap(~ Region)
+```
+Here we can see Region 1 had a lower count of plots with 1 fire over the years compared to Region 2, however it has more occurrences of plots that had several fires throughout the years.
+
+## Tables and Plots
+
 
 ```{r}
 filtered <- bernoulli |>
@@ -191,6 +180,8 @@ stargazer(month_summary_2022, type = "text", title = "Averaged Area Burned in He
 ```{r}
 stargazer(month_summary_2023, type = "text", title = "Averaged Area Burned in Hectares per Region and Month in 2023", digits = 2, summary = FALSE, rownames = FALSE, out = "2023table.txt")
 ```
+
+Average hectare of burned area, grouped by region, over time.
 
 ```{r}
 ggplot(year_summary, aes(x = year, y = mean_area_burned, 
